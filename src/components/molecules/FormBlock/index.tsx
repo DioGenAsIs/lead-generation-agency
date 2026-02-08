@@ -11,6 +11,8 @@ type Props = {
   fields?: any[];
   submitLabel?: string;
   styles?: any;
+  // любые дополнительные поля из Stackbit
+  [key: string]: any;
 };
 
 function getUtmFromUrl() {
@@ -19,49 +21,52 @@ function getUtmFromUrl() {
 }
 
 export default function FormBlock(props: Props) {
-  const { elementId, className, fields = [], submitLabel, styles = {} } = props;
+  const { elementId = 'form', className, fields = [], submitLabel = 'Submit', styles = {} } = props;
 
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  if (!fields?.length) return null;
+  if (!fields || fields.length === 0) return null;
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!formRef.current || isSubmitting) return;
 
-    // Отправляем в Supabase только лид-форму
-    if (elementId !== 'lead-form') {
-      // Например, services-note просто не отправляем никуда
-      return;
-    }
+    // ✅ Отправляем в Supabase/Netlify только лид-форму (lead-form).
+    // services-note (чекбоксы) можно не слать.
+    if (elementId !== 'lead-form') return;
 
     setIsSubmitting(true);
 
     try {
-      const data = new FormData(formRef.current);
-      const value = Object.fromEntries(data.entries());
+      const formData = new FormData(formRef.current);
 
-      const phone = String(value.phone || '').trim();
-      const consent = value.consent === 'on' || value.consent === 'true' || value.consent === true;
+      // безопасно читаем значения как строки
+      const name = String(formData.get('name') ?? '').trim();
+      const phone = String(formData.get('phone') ?? '').trim();
+      const telegram = String(formData.get('telegram') ?? '').trim();
+      const course = String(formData.get('course') ?? '').trim();
+      const budget = String(formData.get('budget') ?? '').trim();
 
-      if (!phone || phone.length < 6) {
+      // ✅ чекбокс: если отмечен — значение 'on', иначе null
+      const consent = formData.get('consent') === 'on';
+
+      // минимальная валидация
+      if (!phone || phone.replace(/\D/g, '').length < 6) {
         alert('Укажите телефон');
         return;
       }
-
       if (!consent) {
         alert('Нужно согласие на обработку персональных данных');
         return;
       }
 
       const payload = {
-        name: String(value.name || '').trim(),
+        name,
         phone,
-        telegram: String(value.telegram || '').trim(),
-        course: String(value.course || '').trim(),
-        budget: String(value.budget || '').trim(),
-        consent: true,
+        telegram,
+        course,
+        budget,
         source: 'site',
         utm: getUtmFromUrl()
       };
@@ -72,10 +77,9 @@ export default function FormBlock(props: Props) {
         body: JSON.stringify(payload)
       });
 
-      const out = await res.json().catch(() => ({}));
-
       if (!res.ok) {
-        alert(out?.error ? `Ошибка: ${out.error}` : 'Ошибка отправки заявки');
+        const err = await res.json().catch(() => ({}));
+        alert(err?.error ? `Ошибка: ${err.error}` : 'Ошибка отправки заявки');
         return;
       }
 
