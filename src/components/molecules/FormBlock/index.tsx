@@ -21,39 +21,44 @@ function getUtmFromUrl(): Record<string, string> {
   return Object.fromEntries(new URLSearchParams(window.location.search).entries());
 }
 
+function getNowTs(): number {
+  return Date.now();
+}
+
 export default function FormBlock(props: Props) {
   const { elementId, className, fields = [], submitLabel, styles = {} } = props;
 
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [ts] = React.useState<number>(() => getNowTs()); // ✅ фиксируем timestamp на момент первого рендера
 
   if (!fields?.length) return null;
 
   // Отправляем ТОЛЬКО lead-form (чтобы services-note не улетал в базу)
   const shouldSubmitToApi = elementId === 'lead-form';
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!formRef.current || isSubmitting) return;
 
     // Если это не lead-form — просто ничего не делаем (или можно показать "Ок")
-    if (!shouldSubmitToApi) {
-      // Например можно показать лёгкий feedback:
-      // alert('Ок ✅');
-      return;
-    }
+    if (!shouldSubmitToApi) return;
 
     setIsSubmitting(true);
 
     try {
       const formData = new FormData(formRef.current);
-      const value = Object.fromEntries(formData.entries());
+      const value = Object.fromEntries(formData.entries()) as Record<string, FormDataEntryValue>;
 
-      const name = String((value as any).name || '').trim();
-      const phone = String((value as any).phone || '').trim();
-      const telegram = String((value as any).telegram || '').trim();
-      const course = String((value as any).course || '').trim();
-      const budget = String((value as any).budget || '').trim();
+      const name = String(value.name ?? '').trim();
+      const phone = String(value.phone ?? '').trim();
+      const telegram = String(value.telegram ?? '').trim();
+      const course = String(value.course ?? '').trim();
+      const budget = String(value.budget ?? '').trim();
+
+      // ✅ anti-bot: honeypot + timestamp
+      const hp = String(value.company ?? '').trim();
+      const tsFromForm = Number(value.ts ?? ts);
 
       // ✅ Правильная проверка consent
       // checkbox обычно даёт 'on', но на всякий случай считаем истинным любое непустое значение
@@ -64,7 +69,7 @@ export default function FormBlock(props: Props) {
         String(consentRaw) !== 'false' &&
         String(consentRaw) !== '0';
 
-      if (!phone || phone.length < 6) {
+      if (!phone || phone.replace(/\D/g, '').length < 6) {
         alert('Укажите телефон');
         return;
       }
@@ -80,7 +85,9 @@ export default function FormBlock(props: Props) {
         telegram,
         course,
         budget,
-        consent, // ✅ ВАЖНО: теперь реально уходит на сервер
+        consent,
+        hp, // ✅ honeypot
+        ts: tsFromForm, // ✅ timestamp
         source: 'site',
         utm: getUtmFromUrl()
       };
@@ -109,15 +116,21 @@ export default function FormBlock(props: Props) {
 
   return (
     <Annotated content={props}>
-      <form
-        className={className}
-        name={elementId}
-        id={elementId}
-        onSubmit={handleSubmit}
-        ref={formRef}
-      >
+      <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
         <div className="grid gap-6 sm:grid-cols-2">
           <input type="hidden" name="form-name" value={elementId} />
+
+          {/* ✅ anti-bot: honeypot + timestamp */}
+          <input
+            type="text"
+            name="company"
+            tabIndex={-1}
+            autoComplete="off"
+            className="hidden"
+            aria-hidden="true"
+          />
+          <input type="hidden" name="ts" value={ts} />
+
           {fields.map((field, index) => (
             <DynamicComponent key={index} {...field} />
           ))}
