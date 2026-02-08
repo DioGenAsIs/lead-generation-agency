@@ -26,16 +26,13 @@ export default function FormBlock(props: Props) {
 
   if (!fields?.length) return null;
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formRef.current || isSubmitting) return;
 
-    // ✅ Важно: отправляем в Supabase ТОЛЬКО лид-форму
-    // (а "services-note" с чекбоксами просто не шлём)
+    // Отправляем в Supabase только лид-форму
     if (elementId !== 'lead-form') {
-      // хочешь — можно вообще ничего не делать
-      // либо показать лёгкое сообщение:
-      // alert('Ок 👍');
+      // Например, services-note просто не отправляем никуда
       return;
     }
 
@@ -45,26 +42,29 @@ export default function FormBlock(props: Props) {
       const data = new FormData(formRef.current);
       const value = Object.fromEntries(data.entries());
 
-      const payload = {
-        name: String(value.name ?? '').trim(),
-        phone: String(value.phone ?? '').trim(),
-        telegram: String(value.telegram ?? '').trim(),
-        course: String(value.course ?? '').trim(),
-        budget: String(value.budget ?? '').trim(),
-        consent: value.consent === 'on' || value.consent === 'true' || value.consent === true,
-        source: 'site',
-        utm: getUtmFromUrl()
-      };
+      const phone = String(value.phone || '').trim();
+      const consent = value.consent === 'on' || value.consent === 'true' || value.consent === true;
 
-      // минимальная валидация
-      if (!payload.phone || payload.phone.length < 6) {
+      if (!phone || phone.length < 6) {
         alert('Укажите телефон');
         return;
       }
-      if (!payload.consent) {
-        alert('Нужно согласие на обработку данных');
+
+      if (!consent) {
+        alert('Нужно согласие на обработку персональных данных');
         return;
       }
+
+      const payload = {
+        name: String(value.name || '').trim(),
+        phone,
+        telegram: String(value.telegram || '').trim(),
+        course: String(value.course || '').trim(),
+        budget: String(value.budget || '').trim(),
+        consent: true,
+        source: 'site',
+        utm: getUtmFromUrl()
+      };
 
       const res = await fetch('/.netlify/functions/lead', {
         method: 'POST',
@@ -72,9 +72,10 @@ export default function FormBlock(props: Props) {
         body: JSON.stringify(payload)
       });
 
+      const out = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err?.error ? `Ошибка: ${err.error}` : 'Ошибка отправки заявки');
+        alert(out?.error ? `Ошибка: ${out.error}` : 'Ошибка отправки заявки');
         return;
       }
 
@@ -89,14 +90,9 @@ export default function FormBlock(props: Props) {
 
   return (
     <Annotated content={props}>
-      <form
-        ref={formRef}
-        className={className}
-        id={elementId}
-        onSubmit={handleSubmit}
-        noValidate
-      >
+      <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
         <div className="grid gap-6 sm:grid-cols-2">
+          <input type="hidden" name="form-name" value={elementId} />
           {fields.map((field, index) => (
             <DynamicComponent key={index} {...field} />
           ))}
