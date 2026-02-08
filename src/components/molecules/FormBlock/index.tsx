@@ -6,21 +6,19 @@ import { DynamicComponent } from '@/components/components-registry';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 
 export default function FormBlock(props) {
-    const formRef = React.createRef<HTMLFormElement>();
+    const formRef = React.useRef<HTMLFormElement>(null);
     const { elementId, className, fields = [], submitLabel, styles = {} } = props;
 
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-    if (fields.length === 0) {
-        return null;
-    }
+    if (!fields.length) return null;
 
     function getUtmFromUrl() {
         if (typeof window === 'undefined') return {};
         return Object.fromEntries(new URLSearchParams(window.location.search).entries());
     }
 
-    async function handleSubmit(event) {
+    async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
         if (!formRef.current || isSubmitting) return;
 
@@ -30,11 +28,8 @@ export default function FormBlock(props) {
             const data = new FormData(formRef.current);
             const value = Object.fromEntries(data.entries());
 
-            // ВАЖНО: имена полей должны совпадать с тем, что у тебя в content/pages/index.md
-            // У тебя, судя по скрину, примерно такие:
-            // name, phone, telegram, course, budget, updatesConsent (чекбокс)
             const payload = {
-                name: value.name || value.firstName || '', // на всякий случай, если где-то другое имя
+                name: value.name || '',
                 phone: value.phone || '',
                 telegram: value.telegram || '',
                 course: value.course || '',
@@ -43,9 +38,8 @@ export default function FormBlock(props) {
                 utm: getUtmFromUrl()
             };
 
-            // минимальная валидация
             if (!payload.phone || String(payload.phone).trim().length < 6) {
-                alert('Укажите телефон');
+                alert('Укажите корректный телефон');
                 return;
             }
 
@@ -57,15 +51,13 @@ export default function FormBlock(props) {
 
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                alert(err?.error ? `Ошибка: ${err.error}` : 'Ошибка отправки заявки');
-                return;
+                throw new Error(err?.error || 'Ошибка отправки');
             }
 
-            // успех
             alert('Заявка отправлена 🚀');
             formRef.current.reset();
         } catch (e: any) {
-            alert(`Ошибка: ${e?.message || 'что-то пошло не так'}`);
+            alert(e.message || 'Что-то пошло не так');
         } finally {
             setIsSubmitting(false);
         }
@@ -73,14 +65,24 @@ export default function FormBlock(props) {
 
     return (
         <Annotated content={props}>
-            <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
+            <form
+                ref={formRef}
+                id={elementId}
+                className={className}
+                onSubmit={handleSubmit}
+            >
                 <div className="grid gap-6 sm:grid-cols-2">
-                    <input type="hidden" name="form-name" value={elementId} />
-                    {fields.map((field, index) => {
-                        return <DynamicComponent key={index} {...field} />;
-                    })}
+                    {fields.map((field, index) => (
+                        <DynamicComponent key={index} {...field} />
+                    ))}
                 </div>
-                <div className={classNames('mt-8', mapStyles({ textAlign: styles.self?.textAlign ?? 'left' }))}>
+
+                <div
+                    className={classNames(
+                        'mt-8',
+                        mapStyles({ textAlign: styles.self?.textAlign ?? 'left' })
+                    )}
+                >
                     <button
                         type="submit"
                         disabled={isSubmitting}
