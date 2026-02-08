@@ -4,13 +4,13 @@
   "header": {
     "type": "Header",
     "headerVariant": "variant-c",
-    "isSticky": false,
+    "isSticky": true,
     "title": "Lead Generation Agency",
     "isTitleVisible": true,
     "primaryLinks": [
-      { "type": "Link", "label": "Услуги", "url": "/info" },
-      { "type": "Link", "label": "Кейсы", "url": "/projects" },
-      { "type": "Link", "label": "Блог", "url": "/blog" }
+      { "type": "Link", "label": "Услуги", "url": "/#services" },
+      { "type": "Link", "label": "Кейсы", "url": "/#cases" },
+      { "type": "Link", "label": "Заявка", "url": "/#lead" }
     ],
     "socialLinks": [
       {
@@ -28,14 +28,19 @@
         "icon": "whatsapp"
       }
     ],
-    "styles": { "self": { "width": "full" } }
+    "styles": {
+      "self": {
+        "width": "full"
+      }
+    }
   },
   "footer": {
     "type": "Footer",
     "primaryLinks": [
-      { "type": "Link", "label": "Услуги", "url": "/info", "altText": "" },
-      { "type": "Link", "label": "Контакты", "url": "mailto:hello@lead-generation.ru", "altText": "" },
-      { "type": "Link", "label": "Блог", "url": "/blog", "altText": "" }
+      { "type": "Link", "label": "Услуги", "url": "/#services", "altText": "" },
+      { "type": "Link", "label": "Кейсы", "url": "/#cases", "altText": "" },
+      { "type": "Link", "label": "Оставить заявку", "url": "/#lead", "altText": "" },
+      { "type": "Link", "label": "Написать в Telegram", "url": "https://t.me/YOUR_TELEGRAM", "altText": "" }
     ],
     "contacts": {
       "type": "ContactBlock",
@@ -44,10 +49,10 @@
       "phoneAltText": "Наш телефон",
       "email": "hello@lead-generation.ru",
       "emailAltText": "Наш email",
-      "address": "Москва, ул. Примерная, 123",
-      "addressAltText": "Наш офис"
+      "address": "Москва",
+      "addressAltText": "Город"
     },
-    "copyrightText": "© 2024 Lead Generation Agency. Все права защищены.",
+    "copyrightText": "© 2026 Lead Generation Agency. Все права защищены.",
     "styles": {
       "self": {
         "width": "narrow",
