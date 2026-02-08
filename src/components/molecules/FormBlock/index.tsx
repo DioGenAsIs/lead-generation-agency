@@ -5,7 +5,7 @@ import { Annotated } from '@/components/Annotated';
 import { DynamicComponent } from '@/components/components-registry';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 
-// ✅ Это то, что нужно Annotated
+// Минимальный тип, чтобы не ругался Annotated (HasAnnotation)
 type HasAnnotation = { 'data-sb-field-path'?: string };
 
 type Props = HasAnnotation & {
@@ -14,46 +14,61 @@ type Props = HasAnnotation & {
   fields?: any[];
   submitLabel?: string;
   styles?: any;
-  [key: string]: any;
 };
 
-function getUtmFromUrl() {
+function getUtmFromUrl(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   return Object.fromEntries(new URLSearchParams(window.location.search).entries());
 }
 
 export default function FormBlock(props: Props) {
-  const { elementId = 'form', className, fields = [], submitLabel = 'Submit', styles = {} } = props;
+  const { elementId, className, fields = [], submitLabel, styles = {} } = props;
 
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  if (!fields || fields.length === 0) return null;
+  if (!fields?.length) return null;
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Отправляем ТОЛЬКО lead-form (чтобы services-note не улетал в базу)
+  const shouldSubmitToApi = elementId === 'lead-form';
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formRef.current || isSubmitting) return;
 
-    // Отправляем только lead-form
-    if (elementId !== 'lead-form') return;
+    // Если это не lead-form — просто ничего не делаем (или можно показать "Ок")
+    if (!shouldSubmitToApi) {
+      // Например можно показать лёгкий feedback:
+      // alert('Ок ✅');
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
       const formData = new FormData(formRef.current);
+      const value = Object.fromEntries(formData.entries());
 
-      const name = String(formData.get('name') ?? '').trim();
-      const phone = String(formData.get('phone') ?? '').trim();
-      const telegram = String(formData.get('telegram') ?? '').trim();
-      const course = String(formData.get('course') ?? '').trim();
-      const budget = String(formData.get('budget') ?? '').trim();
+      const name = String((value as any).name || '').trim();
+      const phone = String((value as any).phone || '').trim();
+      const telegram = String((value as any).telegram || '').trim();
+      const course = String((value as any).course || '').trim();
+      const budget = String((value as any).budget || '').trim();
 
-      const consent = formData.get('consent') === 'on';
+      // ✅ Правильная проверка consent
+      // checkbox обычно даёт 'on', но на всякий случай считаем истинным любое непустое значение
+      const consentRaw = formData.get('consent');
+      const consent =
+        consentRaw !== null &&
+        String(consentRaw).trim() !== '' &&
+        String(consentRaw) !== 'false' &&
+        String(consentRaw) !== '0';
 
-      if (!phone || phone.replace(/\D/g, '').length < 6) {
+      if (!phone || phone.length < 6) {
         alert('Укажите телефон');
         return;
       }
+
       if (!consent) {
         alert('Нужно согласие на обработку персональных данных');
         return;
@@ -65,6 +80,7 @@ export default function FormBlock(props: Props) {
         telegram,
         course,
         budget,
+        consent, // ✅ ВАЖНО: теперь реально уходит на сервер
         source: 'site',
         utm: getUtmFromUrl()
       };
@@ -75,9 +91,10 @@ export default function FormBlock(props: Props) {
         body: JSON.stringify(payload)
       });
 
+      const body = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err?.error ? `Ошибка: ${err.error}` : 'Ошибка отправки заявки');
+        alert(body?.error ? `Ошибка: ${body.error}` : 'Ошибка отправки заявки');
         return;
       }
 
@@ -92,7 +109,13 @@ export default function FormBlock(props: Props) {
 
   return (
     <Annotated content={props}>
-      <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
+      <form
+        className={className}
+        name={elementId}
+        id={elementId}
+        onSubmit={handleSubmit}
+        ref={formRef}
+      >
         <div className="grid gap-6 sm:grid-cols-2">
           <input type="hidden" name="form-name" value={elementId} />
           {fields.map((field, index) => (
