@@ -1,176 +1,120 @@
----
-type: PageLayout
-title: Home
-colors: colors-a
-backgroundImage:
-  type: BackgroundImage
-  url: /images/bg1.jpg
-  backgroundSize: cover
-  backgroundPosition: center
-  backgroundRepeat: no-repeat
-  opacity: 75
+import classNames from 'classnames';
+import * as React from 'react';
 
-sections:
-  # HERO
-  - type: HeroSection
-    elementId: hero
-    colors: colors-f
-    backgroundSize: full
-    title: >-
-      Лидоген для онлайн-курсов: заявки через Яндекс и Telegram
-    subtitle: >-
-      Запускаем рекламу, подключаем сбор заявок (сайт + Telegram) и даём понятную
-      воронку: лид → дозвон → продажа. Можно стартовать без сложных интеграций.
-    actions:
-      - type: Link
-        label: Оставить заявку
-        url: /#lead
-      - type: Link
-        label: Написать в Telegram
-        url: https://t.me/YOUR_TELEGRAM
-    styles:
-      self:
-        height: auto
-        width: wide
-        margin: [mt-0, mb-0, ml-0, mr-0]
-        padding: [pt-36, pb-48, pl-4, pr-4]
-        flexDirection: row
-        textAlign: left
+import { Annotated } from '@/components/Annotated';
+import { DynamicComponent } from '@/components/components-registry';
+import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 
-  # CASES (можно использовать твои projects как "кейсы")
-  - type: FeaturedProjectsSection
-    elementId: cases
-    colors: colors-f
-    variant: variant-b
-    subtitle: Кейсы
-    showDate: false
-    showDescription: true
-    showFeaturedImage: true
-    showReadMoreLink: true
-    actions:
-      - type: Link
-        label: Смотреть все кейсы
-        url: /projects
-    projects:
-      - content/pages/projects/project-two.md
-      - content/pages/projects/project-three.md
-      - content/pages/projects/project-one.md
-    styles:
-      self:
-        height: auto
-        width: wide
-        padding: [pt-24, pb-24, pl-4, pr-4]
-        textAlign: left
+type Props = {
+  elementId?: string;
+  className?: string;
+  fields?: any[];
+  submitLabel?: string;
+  styles?: any;
+};
 
-  # SERVICES (временно как отдельная "контактная" секция с текстом — если у темы есть FeaturesSection, лучше его)
-  - type: ContactSection
-    elementId: services
-    colors: colors-f
-    backgroundSize: full
-    title: "Что мы делаем"
-    form:
-      type: FormBlock
-      elementId: services-note
-      fields:
-        - type: CheckboxFormControl
-          name: srv_ads
-          label: "Настройка рекламы (Яндекс Поиск/РСЯ)"
-          isRequired: false
-          width: full
-        - type: CheckboxFormControl
-          name: srv_funnel
-          label: "Воронка: лендинг + Telegram + сбор заявок"
-          isRequired: false
-          width: full
-        - type: CheckboxFormControl
-          name: srv_analytics
-          label: "Аналитика: лид → дозвон → продажа"
-          isRequired: false
-          width: full
-        - type: CheckboxFormControl
-          name: srv_opt
-          label: "Оптимизация CPL/CR и качество лидов"
-          isRequired: false
-          width: full
-      submitLabel: "Понятно ✅"
-      styles:
-        self:
-          textAlign: left
-    styles:
-      self:
-        height: auto
-        width: narrow
-        margin: [mt-0, mb-0, ml-0, mr-0]
-        padding: [pt-24, pb-24, pr-4, pl-4]
-        flexDirection: row
-        textAlign: left
+function getUtmFromUrl() {
+  if (typeof window === 'undefined') return {};
+  return Object.fromEntries(new URLSearchParams(window.location.search).entries());
+}
 
-  # LEAD FORM
-  - type: ContactSection
-    elementId: lead
-    colors: colors-f
-    backgroundSize: full
-    title: "Оставить заявку"
-    form:
-      type: FormBlock
-      elementId: lead-form
-      fields:
-        - type: TextFormControl
-          name: name
-          label: Имя
-          hideLabel: true
-          placeholder: "Имя (необязательно)"
-          isRequired: false
-          width: 1/2
+export default function FormBlock(props: Props) {
+  const { elementId, className, fields = [], submitLabel, styles = {} } = props;
 
-        - type: TextFormControl
-          name: phone
-          label: Телефон
-          hideLabel: true
-          placeholder: "Телефон (обязательно)"
-          isRequired: true
-          width: 1/2
+  const formRef = React.useRef<HTMLFormElement | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-        - type: TextFormControl
-          name: telegram
-          label: Telegram
-          hideLabel: true
-          placeholder: "Telegram @username (необязательно)"
-          isRequired: false
-          width: 1/2
+  if (!fields?.length) return null;
 
-        - type: TextFormControl
-          name: course
-          label: Курс
-          hideLabel: true
-          placeholder: "Курс/ниша (опционально)"
-          isRequired: false
-          width: 1/2
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!formRef.current || isSubmitting) return;
 
-        - type: TextFormControl
-          name: budget
-          label: Бюджет
-          hideLabel: true
-          placeholder: "Бюджет в день (опционально)"
-          isRequired: false
-          width: full
+    // ✅ Важно: отправляем в Supabase ТОЛЬКО лид-форму
+    // (а "services-note" с чекбоксами просто не шлём)
+    if (elementId !== 'lead-form') {
+      // хочешь — можно вообще ничего не делать
+      // либо показать лёгкое сообщение:
+      // alert('Ок 👍');
+      return;
+    }
 
-        - type: CheckboxFormControl
-          name: consent
-          label: "Согласен на обработку персональных данных"
-          isRequired: true
-          width: full
+    setIsSubmitting(true);
 
-      submitLabel: "Отправить заявку 🚀"
-      styles:
-        self:
-          textAlign: center
-    styles:
-      self:
-        height: auto
-        width: narrow
-        margin: [mt-0, mb-0, ml-0, mr-0]
-        padding: [pt-24, pb-24, pr-4, pl-4]
-        flexDirection: row
-        textAlign: left
----
+    try {
+      const data = new FormData(formRef.current);
+      const value = Object.fromEntries(data.entries());
+
+      const payload = {
+        name: String(value.name ?? '').trim(),
+        phone: String(value.phone ?? '').trim(),
+        telegram: String(value.telegram ?? '').trim(),
+        course: String(value.course ?? '').trim(),
+        budget: String(value.budget ?? '').trim(),
+        consent: value.consent === 'on' || value.consent === 'true' || value.consent === true,
+        source: 'site',
+        utm: getUtmFromUrl()
+      };
+
+      // минимальная валидация
+      if (!payload.phone || payload.phone.length < 6) {
+        alert('Укажите телефон');
+        return;
+      }
+      if (!payload.consent) {
+        alert('Нужно согласие на обработку данных');
+        return;
+      }
+
+      const res = await fetch('/.netlify/functions/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err?.error ? `Ошибка: ${err.error}` : 'Ошибка отправки заявки');
+        return;
+      }
+
+      alert('Заявка отправлена 🚀');
+      formRef.current.reset();
+    } catch (err: any) {
+      alert(`Ошибка: ${err?.message || 'что-то пошло не так'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Annotated content={props}>
+      <form
+        ref={formRef}
+        className={className}
+        id={elementId}
+        onSubmit={handleSubmit}
+        noValidate
+      >
+        <div className="grid gap-6 sm:grid-cols-2">
+          {fields.map((field, index) => (
+            <DynamicComponent key={index} {...field} />
+          ))}
+        </div>
+
+        <div className={classNames('mt-8', mapStyles({ textAlign: styles?.self?.textAlign ?? 'left' }))}>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={classNames(
+              'inline-flex items-center justify-center px-5 py-4 text-lg transition border-2 border-current hover:bottom-shadow-6 hover:-translate-y-1.5',
+              isSubmitting && 'opacity-60 cursor-not-allowed'
+            )}
+          >
+            {isSubmitting ? 'Отправляем…' : submitLabel}
+          </button>
+        </div>
+      </form>
+    </Annotated>
+  );
+}
