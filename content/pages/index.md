@@ -9,47 +9,48 @@ backgroundImage:
   backgroundPosition: center
   backgroundRepeat: no-repeat
   opacity: 75
+
 sections:
-  - elementId: ''
+  # HERO
+  - type: HeroSection
+    elementId: hero
     colors: colors-f
     backgroundSize: full
     title: >-
-      I’m a developer, digital artist, consultant and a bunch of other
-      impressive titles and buzz words.
+      Лидоген для онлайн-курсов: заявки через Яндекс и Telegram
     subtitle: >-
-      This is my info—I’m sharing it all this with ya’ll to impress you with all
-      the hard work I’ve done in the past few years. Once you’re impressed, you
-      can continue to scroll down to see more details and credentials about me.
+      Запускаем рекламу, подключаем сбор заявок (сайт + Telegram) и даём понятную
+      воронку: лид → дозвон → продажа. Можно стартовать без сложных интеграций.
+    actions:
+      - type: Link
+        label: Оставить заявку
+        url: /#lead
+      - type: Link
+        label: Написать в Telegram
+        url: https://t.me/YOUR_TELEGRAM
     styles:
       self:
         height: auto
         width: wide
-        margin:
-          - mt-0
-          - mb-0
-          - ml-0
-          - mr-0
-        padding:
-          - pt-36
-          - pb-48
-          - pl-4
-          - pr-4
-        flexDirection: row-reverse
+        margin: [mt-0, mb-0, ml-0, mr-0]
+        padding: [pt-36, pb-48, pl-4, pr-4]
+        flexDirection: row
         textAlign: left
-    type: HeroSection
-    actions: []
-  - colors: colors-f
-    type: FeaturedProjectsSection
-    elementId: ''
-    actions:
-      - type: Link
-        label: See all projects
-        url: /projects
+
+  # CASES (можно использовать твои projects как "кейсы")
+  - type: FeaturedProjectsSection
+    elementId: cases
+    colors: colors-f
+    variant: variant-b
+    subtitle: Кейсы
     showDate: false
     showDescription: true
     showFeaturedImage: true
     showReadMoreLink: true
-    variant: variant-b
+    actions:
+      - type: Link
+        label: Смотреть все кейсы
+        url: /projects
     projects:
       - content/pages/projects/project-two.md
       - content/pages/projects/project-three.md
@@ -58,82 +59,109 @@ sections:
       self:
         height: auto
         width: wide
-        padding:
-          - pt-24
-          - pb-24
-          - pl-4
-          - pr-4
+        padding: [pt-24, pb-24, pl-4, pr-4]
         textAlign: left
-    subtitle: Projects
-  - type: FeaturedPostsSection
-    elementId: ''
+
+  # SERVICES (временно как отдельная "контактная" секция с текстом — если у темы есть FeaturesSection, лучше его)
+  - type: ContactSection
+    elementId: services
     colors: colors-f
-    variant: variant-d
-    subtitle: Featured Posts
-    showFeaturedImage: false
-    actions:
-      - type: Link
-        label: See all posts
-        url: /blog
-    posts:
-      - content/pages/blog/post-six.md
-      - content/pages/blog/post-four.md
-      - content/pages/blog/post-three.md
-    showDate: true
-    showExcerpt: true
-    showReadMoreLink: true
+    backgroundSize: full
+    title: "Что мы делаем"
+    form:
+      type: FormBlock
+      elementId: services-note
+      fields:
+        - type: CheckboxFormControl
+          name: srv_ads
+          label: "Настройка рекламы (Яндекс Поиск/РСЯ)"
+          isRequired: false
+          width: full
+        - type: CheckboxFormControl
+          name: srv_funnel
+          label: "Воронка: лендинг + Telegram + сбор заявок"
+          isRequired: false
+          width: full
+        - type: CheckboxFormControl
+          name: srv_analytics
+          label: "Аналитика: лид → дозвон → продажа"
+          isRequired: false
+          width: full
+        - type: CheckboxFormControl
+          name: srv_opt
+          label: "Оптимизация CPL/CR и качество лидов"
+          isRequired: false
+          width: full
+      submitLabel: "Понятно ✅"
+      styles:
+        self:
+          textAlign: left
     styles:
       self:
         height: auto
         width: narrow
-        padding:
-          - pt-28
-          - pb-48
-          - pl-4
-          - pr-4
+        margin: [mt-0, mb-0, ml-0, mr-0]
+        padding: [pt-24, pb-24, pr-4, pl-4]
+        flexDirection: row
         textAlign: left
+
+  # LEAD FORM
   - type: ContactSection
+    elementId: lead
     colors: colors-f
     backgroundSize: full
-    title: "Got an interesting project? Tell me more...\U0001F4AC"
+    title: "Оставить заявку"
     form:
       type: FormBlock
-      elementId: sign-up-form
+      elementId: lead-form
       fields:
-        - name: firstName
-          label: First Name
+        - type: TextFormControl
+          name: name
+          label: Имя
           hideLabel: true
-          placeholder: First Name
-          isRequired: true
-          width: 1/2
-          type: TextFormControl
-        - name: lastName
-          label: Last Name
-          hideLabel: true
-          placeholder: Last Name
+          placeholder: "Имя (необязательно)"
           isRequired: false
           width: 1/2
-          type: TextFormControl
-        - name: email
-          label: Email
+
+        - type: TextFormControl
+          name: phone
+          label: Телефон
           hideLabel: true
-          placeholder: Email
+          placeholder: "Телефон (обязательно)"
           isRequired: true
           width: 1/2
-          type: EmailFormControl
-        - name: address
-          label: Address
+
+        - type: TextFormControl
+          name: telegram
+          label: Telegram
           hideLabel: true
-          placeholder: Address
-          isRequired: true
+          placeholder: "Telegram @username (необязательно)"
+          isRequired: false
           width: 1/2
-          type: TextFormControl
-        - name: updatesConsent
-          label: Sign me up to recieve updates
+
+        - type: TextFormControl
+          name: course
+          label: Курс
+          hideLabel: true
+          placeholder: "Курс/ниша (опционально)"
+          isRequired: false
+          width: 1/2
+
+        - type: TextFormControl
+          name: budget
+          label: Бюджет
+          hideLabel: true
+          placeholder: "Бюджет в день (опционально)"
           isRequired: false
           width: full
-          type: CheckboxFormControl
-      submitLabel: "Submit \U0001F680"
+
+        - type: CheckboxFormControl
+          name: consent
+          label: "Согласен на обработку персональных данных"
+          isRequired: true
+          width: full
+
+      submitLabel: "Отправить заявку 🚀"
       styles:
         self:
           textAlign: center
@@ -141,16 +169,8 @@ sections:
       self:
         height: auto
         width: narrow
-        margin:
-          - mt-0
-          - mb-0
-          - ml-0
-          - mr-0
-        padding:
-          - pt-24
-          - pb-24
-          - pr-4
-          - pl-4
+        margin: [mt-0, mb-0, ml-0, mr-0]
+        padding: [pt-24, pb-24, pr-4, pl-4]
         flexDirection: row
         textAlign: left
 ---
