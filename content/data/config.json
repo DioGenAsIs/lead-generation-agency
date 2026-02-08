@@ -1,100 +1,58 @@
 {
-    "type": "Config",
-    "favicon": "/images/favicon.svg",
-    "header": {
-        "type": "Header",
-        "headerVariant": "variant-c",
-        "isSticky": false,
-        "title": "Personal",
-        "isTitleVisible": true,
-        "primaryLinks": [
-            {
-                "type": "Link",
-                "label": "Info",
-                "url": "/info"
-            },
-            {
-                "type": "Link",
-                "label": "Projects",
-                "url": "/projects"
-            },
-            {
-                "type": "Link",
-                "label": "Blog",
-                "url": "/blog"
-            }
-        ],
-        "socialLinks": [
-            {
-                "type": "Social",
-                "altText": "Twitter",
-                "label": "Twitter",
-                "url": "https://twitter.com/netlify",
-                "icon": "twitter"
-            },
-            {
-                "type": "Social",
-                "altText": "GitHub",
-                "label": "GitHub",
-                "url": "https://github.com/netlify-templates",
-                "icon": "github"
-            }
-        ],
-        "styles": {
-            "self": {
-                "width": "full"
-            }
-        }
+  "type": "Config",
+  "favicon": "/images/favicon.svg",
+  "header": {
+    "type": "Header",
+    "headerVariant": "variant-c",
+    "isSticky": false,
+    "title": "Lead Generation Agency",
+    "isTitleVisible": true,
+    "primaryLinks": [
+      { "type": "Link", "label": "Услуги", "url": "/info" },
+      { "type": "Link", "label": "Кейсы", "url": "/projects" },
+      { "type": "Link", "label": "Блог", "url": "/blog" }
+    ],
+    "socialLinks": [
+      {
+        "type": "Social",
+        "altText": "Telegram",
+        "label": "Telegram",
+        "url": "https://t.me/YOUR_TELEGRAM",
+        "icon": "message"
+      },
+      {
+        "type": "Social",
+        "altText": "WhatsApp",
+        "label": "WhatsApp",
+        "url": "https://wa.me/79991234567",
+        "icon": "whatsapp"
+      }
+    ],
+    "styles": { "self": { "width": "full" } }
+  },
+  "footer": {
+    "type": "Footer",
+    "primaryLinks": [
+      { "type": "Link", "label": "Услуги", "url": "/info", "altText": "" },
+      { "type": "Link", "label": "Контакты", "url": "mailto:hello@lead-generation.ru", "altText": "" },
+      { "type": "Link", "label": "Блог", "url": "/blog", "altText": "" }
+    ],
+    "contacts": {
+      "type": "ContactBlock",
+      "title": "Свяжитесь с нами",
+      "phoneNumber": "+7 (999) 123-45-67",
+      "phoneAltText": "Наш телефон",
+      "email": "hello@lead-generation.ru",
+      "emailAltText": "Наш email",
+      "address": "Москва, ул. Примерная, 123",
+      "addressAltText": "Наш офис"
     },
-    "footer": {
-        "type": "Footer",
-        "primaryLinks": [
-            {
-                "type": "Link",
-                "label": "Info",
-                "url": "/info",
-                "altText": ""
-            },
-            {
-                "type": "Link",
-                "label": "Contact",
-                "url": "mailto:thisismyemail.@myemail.me",
-                "altText": ""
-            },
-            {
-                "type": "Link",
-                "label": "Blog",
-                "url": "/blog",
-                "altText": ""
-            },
-            {
-                "type": "Link",
-                "label": "GitHub",
-                "url": "https://github.com/netlify-templates",
-                "altText": "Netlify templates"
-            }
-        ],
-        "contacts": {
-            "type": "ContactBlock",
-            "title": "Contact details",
-            "phoneNumber": "850-123-5021",
-            "phoneAltText": "My phone number",
-            "email": "thisismyemail.@myemail.me",
-            "emailAltText": "My email",
-            "address": "312 Lovely Street, Brooklyn, NY, 123456",
-            "addressAltText": "My address"
-        },
-        "copyrightText": "Powered by [Netlify](https://www.netlify.com/)",
-        "styles": {
-            "self": {
-                "width": "narrow",
-                "padding": [
-                    "pt-16",
-                    "pb-16",
-                    "pr-4",
-                    "pl-4"
-                ]
-            }
-        }
+    "copyrightText": "© 2024 Lead Generation Agency. Все права защищены.",
+    "styles": {
+      "self": {
+        "width": "narrow",
+        "padding": ["pt-16", "pb-16", "pr-4", "pl-4"]
+      }
     }
+  }
 }
