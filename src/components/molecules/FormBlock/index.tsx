@@ -5,13 +5,15 @@ import { Annotated } from '@/components/Annotated';
 import { DynamicComponent } from '@/components/components-registry';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 
-type Props = {
+// ✅ Это то, что нужно Annotated
+type HasAnnotation = { 'data-sb-field-path'?: string };
+
+type Props = HasAnnotation & {
   elementId?: string;
   className?: string;
   fields?: any[];
   submitLabel?: string;
   styles?: any;
-  // любые дополнительные поля из Stackbit
   [key: string]: any;
 };
 
@@ -32,8 +34,7 @@ export default function FormBlock(props: Props) {
     e.preventDefault();
     if (!formRef.current || isSubmitting) return;
 
-    // ✅ Отправляем в Supabase/Netlify только лид-форму (lead-form).
-    // services-note (чекбоксы) можно не слать.
+    // Отправляем только lead-form
     if (elementId !== 'lead-form') return;
 
     setIsSubmitting(true);
@@ -41,17 +42,14 @@ export default function FormBlock(props: Props) {
     try {
       const formData = new FormData(formRef.current);
 
-      // безопасно читаем значения как строки
       const name = String(formData.get('name') ?? '').trim();
       const phone = String(formData.get('phone') ?? '').trim();
       const telegram = String(formData.get('telegram') ?? '').trim();
       const course = String(formData.get('course') ?? '').trim();
       const budget = String(formData.get('budget') ?? '').trim();
 
-      // ✅ чекбокс: если отмечен — значение 'on', иначе null
       const consent = formData.get('consent') === 'on';
 
-      // минимальная валидация
       if (!phone || phone.replace(/\D/g, '').length < 6) {
         alert('Укажите телефон');
         return;
