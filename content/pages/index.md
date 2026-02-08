@@ -1,116 +1,95 @@
-import classNames from 'classnames';
-import * as React from 'react';
+---
+type: PageLayout
+title: Home
+colors: colors-a
 
-import { Annotated } from '@/components/Annotated';
-import { DynamicComponent } from '@/components/components-registry';
-import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
+backgroundImage:
+  type: BackgroundImage
+  url: /images/bg1.jpg
+  backgroundSize: cover
+  backgroundPosition: center
+  backgroundRepeat: no-repeat
+  opacity: 75
 
-type Props = {
-  elementId?: string;
-  className?: string;
-  fields?: any[];
-  submitLabel?: string;
-  styles?: any;
-};
+sections:
+  # HERO
+  - type: HeroSection
+    elementId: hero
+    colors: colors-f
+    backgroundSize: full
+    title: "Лидоген для онлайн-курсов: заявки через Яндекс и Telegram"
+    subtitle: "Запускаем рекламу, подключаем сбор заявок (сайт + Telegram) и даём понятную воронку: лид → дозвон → продажа."
+    actions:
+      - type: Link
+        label: Оставить заявку
+        url: "/#lead"
+      - type: Link
+        label: Написать в Telegram
+        url: "https://t.me/YOUR_TELEGRAM"
 
-function getUtmFromUrl() {
-  if (typeof window === 'undefined') return {};
-  return Object.fromEntries(new URLSearchParams(window.location.search).entries());
-}
+  # LEAD FORM
+  - type: ContactSection
+    elementId: lead
+    colors: colors-f
+    backgroundSize: full
+    title: "Оставить заявку"
+    form:
+      type: FormBlock
+      elementId: lead-form
+      fields:
+        - type: TextFormControl
+          name: name
+          label: Имя
+          hideLabel: true
+          placeholder: "Имя (необязательно)"
+          isRequired: false
+          width: 1/2
 
-export default function FormBlock(props: Props) {
-  const { elementId, className, fields = [], submitLabel, styles = {} } = props;
+        - type: TextFormControl
+          name: phone
+          label: Телефон
+          hideLabel: true
+          placeholder: "Телефон (обязательно)"
+          isRequired: true
+          width: 1/2
 
-  const formRef = React.useRef<HTMLFormElement | null>(null);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+        - type: TextFormControl
+          name: telegram
+          label: Telegram
+          hideLabel: true
+          placeholder: "Telegram @username (необязательно)"
+          isRequired: false
+          width: 1/2
 
-  if (!fields?.length) return null;
+        - type: TextFormControl
+          name: course
+          label: Курс
+          hideLabel: true
+          placeholder: "Курс/ниша (опционально)"
+          isRequired: false
+          width: 1/2
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!formRef.current || isSubmitting) return;
+        - type: TextFormControl
+          name: budget
+          label: Бюджет
+          hideLabel: true
+          placeholder: "Бюджет в день (опционально)"
+          isRequired: false
+          width: full
 
-    // Отправляем в Supabase только лид-форму
-    if (elementId !== 'lead-form') {
-      // Например, services-note просто не отправляем никуда
-      return;
-    }
+        - type: CheckboxFormControl
+          name: consent
+          label: "Согласен на обработку персональных данных"
+          isRequired: true
+          width: full
 
-    setIsSubmitting(true);
+      submitLabel: "Отправить заявку 🚀"
+      styles:
+        self:
+          textAlign: center
 
-    try {
-      const data = new FormData(formRef.current);
-      const value = Object.fromEntries(data.entries());
-
-      const phone = String(value.phone || '').trim();
-      const consent = value.consent === 'on' || value.consent === 'true' || value.consent === true;
-
-      if (!phone || phone.length < 6) {
-        alert('Укажите телефон');
-        return;
-      }
-
-      if (!consent) {
-        alert('Нужно согласие на обработку персональных данных');
-        return;
-      }
-
-      const payload = {
-        name: String(value.name || '').trim(),
-        phone,
-        telegram: String(value.telegram || '').trim(),
-        course: String(value.course || '').trim(),
-        budget: String(value.budget || '').trim(),
-        consent: true,
-        source: 'site',
-        utm: getUtmFromUrl()
-      };
-
-      const res = await fetch('/.netlify/functions/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const out = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        alert(out?.error ? `Ошибка: ${out.error}` : 'Ошибка отправки заявки');
-        return;
-      }
-
-      alert('Заявка отправлена 🚀');
-      formRef.current.reset();
-    } catch (err: any) {
-      alert(`Ошибка: ${err?.message || 'что-то пошло не так'}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <Annotated content={props}>
-      <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
-        <div className="grid gap-6 sm:grid-cols-2">
-          <input type="hidden" name="form-name" value={elementId} />
-          {fields.map((field, index) => (
-            <DynamicComponent key={index} {...field} />
-          ))}
-        </div>
-
-        <div className={classNames('mt-8', mapStyles({ textAlign: styles?.self?.textAlign ?? 'left' }))}>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={classNames(
-              'inline-flex items-center justify-center px-5 py-4 text-lg transition border-2 border-current hover:bottom-shadow-6 hover:-translate-y-1.5',
-              isSubmitting && 'opacity-60 cursor-not-allowed'
-            )}
-          >
-            {isSubmitting ? 'Отправляем…' : submitLabel}
-          </button>
-        </div>
-      </form>
-    </Annotated>
-  );
-}
+    styles:
+      self:
+        width: narrow
+        padding: [pt-24, pb-24, pr-4, pl-4]
+---
