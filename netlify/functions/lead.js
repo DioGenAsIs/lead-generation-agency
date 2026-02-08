@@ -38,12 +38,24 @@ exports.handler = async (event) => {
     return json(500, { error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in Netlify env vars.' });
   }
 
+  // ✅ anti-bot: ограничим размер тела (простая защита от мусора)
+  if ((event.body || '').length > 10_000) {
+    return json(413, { error: 'Payload too large' });
+  }
+
   let payload;
   try {
     payload = JSON.parse(event.body || '{}');
   } catch {
     return json(400, { error: 'Invalid JSON body' });
   }
+
+  // ✅ anti-bot: honeypot + timestamp (серверная проверка)
+  const hp = (payload.hp || payload.company || '').toString().trim(); // поддержка обоих названий
+  const ts = Number(payload.ts || 0);
+  if (hp) return json(200, { ok: true });                 // honeypot заполнен → "тихо" игнорируем
+  if (!ts) return json(400, { error: 'Bad request' });    // нет timestamp
+  if (Date.now() - ts < 2500) return json(200, { ok: true }); // слишком быстро → вероятно бот
 
   const name = (payload.name || '').toString().trim();
   const phone = (payload.phone || '').toString().trim();
@@ -54,7 +66,9 @@ exports.handler = async (event) => {
   const utm = payload.utm || null;
   const consent = !!payload.consent;
 
-  if (!phone || phone.length < 6) {
+  // ✅ чуть надёжнее: считаем цифры телефона
+  const phoneDigits = phone.replace(/\D/g, '');
+  if (!phoneDigits || phoneDigits.length < 6) {
     return json(400, { error: 'Phone is required' });
   }
   if (!consent) {
@@ -70,7 +84,7 @@ exports.handler = async (event) => {
     .insert([
       {
         name: name || null,
-        phone,
+        phone, // оставляем как ввёл пользователь (можешь заменить на phoneDigits при желании)
         telegram: telegram || null,
         course: course || null,
         budget: budget || null,
