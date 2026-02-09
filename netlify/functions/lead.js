@@ -10,29 +10,23 @@ function json(statusCode, body) {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   };
 }
 
-function parseConsent(v) {
-  // чекбокс обычно "on", но пусть будет надежно
-  if (v === true) return true;
-  const s = String(v ?? '').toLowerCase();
-  return s === 'on' || s === 'true' || s === '1' || s === 'yes';
-}
-
 exports.handler = async (event) => {
+  // CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
       },
-      body: ''
+      body: '',
     };
   }
 
@@ -55,48 +49,58 @@ exports.handler = async (event) => {
     return json(400, { error: 'Invalid JSON body' });
   }
 
-  // anti-bot (honeypot + timestamp)
-  const hp = (payload.hp || payload.company || '').toString().trim();
+  // Honeypot (если заполнен — почти точно бот)
+  const hp = String(payload.hp || '').trim();
+  if (hp) {
+    // можно "тихо" игнорировать, но лучше возвращать 204
+    return { statusCode: 204, body: '' };
+  }
+
+  // Время на странице (ts должен быть поставлен ДО сабмита, на загрузке страницы)
   const ts = Number(payload.ts || 0);
-  if (hp) return json(200, { ok: true });
   if (!ts) return json(400, { error: 'Bad request' });
-  if (Date.now() - ts < 2500) return json(200, { ok: true });
 
-  const name = (payload.name || '').toString().trim();
-  const phone = (payload.phone || '').toString().trim();
-  const telegram = (payload.telegram || '').toString().trim();
-  const course = (payload.course || '').toString().trim();
-  const budget = (payload.budget || '').toString().trim();
-  const source = (payload.source || 'site').toString().trim();
-  const utm = payload.utm || null;
+  const ageMs = Date.now() - ts;
+  // Если отправили слишком быстро — не пишем в БД и говорим “слишком быстро”
+  if (ageMs < 1500) {
+    return json(429, { error: 'Too fast. Please try again.' });
+  }
 
-  const consent = parseConsent(payload.consent);
+  const name = String(payload.name || '').trim() || null;
+  const phoneRaw = String(payload.phone || '').trim();
+  const telegram = String(payload.telegram || '').trim() || null;
+  const course = String(payload.course || '').trim() || null;
+  const budget = String(payload.budget || '').trim() || null;
+  const source = String(payload.source || 'site').trim() || null;
+  const utm = payload.utm ?? null;
 
-  const phoneDigits = phone.replace(/\D/g, '');
+  const phoneDigits = phoneRaw.replace(/\D/g, '');
   if (!phoneDigits || phoneDigits.length < 6) {
     return json(400, { error: 'Phone is required' });
   }
+
+  // Consent НЕ сохраняем в таблицу, но требуем
+  const consent = !!payload.consent;
   if (!consent) {
     return json(400, { error: 'Consent is required' });
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
+    auth: { persistSession: false },
   });
 
-  // ✅ consent НЕ сохраняем в таблицу
   const { data, error } = await supabase
     .from('leads')
     .insert([
       {
-        name: name || null,
-        phone,
-        telegram: telegram || null,
-        course: course || null,
-        budget: budget || null,
-        source: source || null,
-        utm: utm || null
-      }
+        name,
+        phone: phoneRaw, // оставляем как ввёл пользователь
+        telegram,
+        course,
+        budget,
+        source,
+        utm,
+      },
     ])
     .select('id');
 
