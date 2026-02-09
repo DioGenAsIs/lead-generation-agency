@@ -16,15 +16,14 @@ function json(statusCode, body) {
   };
 }
 
-function normalizeConsent(value) {
-  if (value === true) return true;
-  if (value === false || value == null) return false;
-  const v = String(value).toLowerCase().trim();
-  return v === 'on' || v === 'true' || v === '1' || v === 'yes';
+function parseConsent(v) {
+  // чекбокс обычно "on", но пусть будет надежно
+  if (v === true) return true;
+  const s = String(v ?? '').toLowerCase();
+  return s === 'on' || s === 'true' || s === '1' || s === 'yes';
 }
 
 exports.handler = async (event) => {
-  // CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -45,7 +44,6 @@ exports.handler = async (event) => {
     return json(500, { error: 'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in Netlify env vars.' });
   }
 
-  // anti-bot: ограничим размер тела
   if ((event.body || '').length > 10_000) {
     return json(413, { error: 'Payload too large' });
   }
@@ -57,14 +55,10 @@ exports.handler = async (event) => {
     return json(400, { error: 'Invalid JSON body' });
   }
 
-  // anti-bot: honeypot + timestamp
-  const hp = (payload.hp || payload.company || '').toString().trim(); // поддержка обоих названий
+  // anti-bot (honeypot + timestamp)
+  const hp = (payload.hp || payload.company || '').toString().trim();
   const ts = Number(payload.ts || 0);
-
-  // honeypot заполнен → "тихо" игнорируем
   if (hp) return json(200, { ok: true });
-
-  // если ты НЕ отправляешь ts с фронта — убери эти 2 проверки ниже
   if (!ts) return json(400, { error: 'Bad request' });
   if (Date.now() - ts < 2500) return json(200, { ok: true });
 
@@ -76,15 +70,12 @@ exports.handler = async (event) => {
   const source = (payload.source || 'site').toString().trim();
   const utm = payload.utm || null;
 
-  // ✅ главное исправление
-  const consent = normalizeConsent(payload.consent);
+  const consent = parseConsent(payload.consent);
 
-  // валидация телефона по цифрам
   const phoneDigits = phone.replace(/\D/g, '');
   if (!phoneDigits || phoneDigits.length < 6) {
     return json(400, { error: 'Phone is required' });
   }
-
   if (!consent) {
     return json(400, { error: 'Consent is required' });
   }
@@ -93,24 +84,23 @@ exports.handler = async (event) => {
     auth: { persistSession: false }
   });
 
+  // ✅ consent НЕ сохраняем в таблицу
   const { data, error } = await supabase
     .from('leads')
     .insert([
       {
         name: name || null,
-        phone, // можно заменить на phoneDigits если хочешь хранить только цифры
+        phone,
         telegram: telegram || null,
         course: course || null,
         budget: budget || null,
         source: source || null,
-        utm: utm || null,
-        consent // ✅ сохраняем
+        utm: utm || null
       }
     ])
     .select('id');
 
   if (error) {
-    console.error('Supabase insert error:', error);
     return json(500, { error: error.message });
   }
 
