@@ -5,136 +5,103 @@ import { Annotated } from '@/components/Annotated';
 import { DynamicComponent } from '@/components/components-registry';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 
-// Минимальный тип, чтобы не ругался Annotated (HasAnnotation)
-type HasAnnotation = { 'data-sb-field-path'?: string };
-
-type Props = HasAnnotation & {
-  elementId?: string;
-  className?: string;
-  fields?: any[];
-  submitLabel?: string;
-  styles?: any;
-};
-
-function getUtmFromUrl(): Record<string, string> {
+function getUtmFromUrl() {
   if (typeof window === 'undefined') return {};
   return Object.fromEntries(new URLSearchParams(window.location.search).entries());
 }
 
-function getNowTs(): number {
-  return Date.now();
-}
-
-export default function FormBlock(props: Props) {
+export default function FormBlock(props: any) {
   const { elementId, className, fields = [], submitLabel, styles = {} } = props;
-
   const formRef = React.useRef<HTMLFormElement | null>(null);
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [ts] = React.useState<number>(() => getNowTs()); // ✅ фиксируем timestamp на момент первого рендера
+  const [error, setError] = React.useState<string | null>(null);
 
   if (!fields?.length) return null;
 
-  // Отправляем ТОЛЬКО lead-form (чтобы services-note не улетал в базу)
-  const shouldSubmitToApi = elementId === 'lead-form';
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formRef.current || isSubmitting) return;
 
-    // Если это не lead-form — просто ничего не делаем (или можно показать "Ок")
-    if (!shouldSubmitToApi) return;
+    setError(null);
+
+    const formData = new FormData(formRef.current);
+
+    // ✅ Проверка галочки до отправки
+    const consentValue = formData.get('consent'); // 'on' если отмечен, иначе null
+    const consentOk = consentValue === 'on' || consentValue === 'true' || consentValue === '1';
+
+    if (!consentOk) {
+      setError('Нужно согласиться на обработку персональных данных.');
+      return;
+    }
+
+    const phone = String(formData.get('phone') || '').trim();
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (!phoneDigits || phoneDigits.length < 6) {
+      setError('Укажите телефон.');
+      return;
+    }
+
+    const payload = {
+      name: String(formData.get('name') || '').trim(),
+      phone,
+      telegram: String(formData.get('telegram') || '').trim(),
+      course: String(formData.get('course') || '').trim(),
+      budget: String(formData.get('budget') || '').trim(),
+      source: 'site',
+      utm: getUtmFromUrl(),
+      consent: true,         // ✅ на бэк передаём, но в БД он не сохраняется
+      hp: '',                // honeypot (если захочешь добавить скрытое поле)
+      ts: Date.now()         // timestamp антибот
+    };
 
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData(formRef.current);
-      const value = Object.fromEntries(formData.entries()) as Record<string, FormDataEntryValue>;
-
-      const name = String(value.name ?? '').trim();
-      const phone = String(value.phone ?? '').trim();
-      const telegram = String(value.telegram ?? '').trim();
-      const course = String(value.course ?? '').trim();
-      const budget = String(value.budget ?? '').trim();
-
-      // ✅ anti-bot: honeypot + timestamp
-      const hp = String(value.company ?? '').trim();
-      const tsFromForm = Number(value.ts ?? ts);
-
-      // ✅ Правильная проверка consent
-      // checkbox обычно даёт 'on', но на всякий случай считаем истинным любое непустое значение
-      const consentRaw = formData.get('consent');
-      const consent =
-        consentRaw !== null &&
-        String(consentRaw).trim() !== '' &&
-        String(consentRaw) !== 'false' &&
-        String(consentRaw) !== '0';
-
-      if (!phone || phone.replace(/\D/g, '').length < 6) {
-        alert('Укажите телефон');
-        return;
-      }
-
-      if (!consent) {
-        alert('Нужно согласие на обработку персональных данных');
-        return;
-      }
-
-      const payload = {
-        name,
-        phone,
-        telegram,
-        course,
-        budget,
-        consent,
-        hp, // ✅ honeypot
-        ts: tsFromForm, // ✅ timestamp
-        source: 'site',
-        utm: getUtmFromUrl()
-      };
-
       const res = await fetch('/.netlify/functions/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      const body = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        alert(body?.error ? `Ошибка: ${body.error}` : 'Ошибка отправки заявки');
+        setError(data?.error || 'Ошибка отправки заявки');
         return;
       }
 
-      alert('Заявка отправлена 🚀');
       formRef.current.reset();
+      alert('Заявка отправлена 🚀');
     } catch (err: any) {
-      alert(`Ошибка: ${err?.message || 'что-то пошло не так'}`);
+      setError(err?.message || 'Что-то пошло не так');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <Annotated content={props}>
-      <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
+    <Annotated content={props as any}>
+      <form
+        className={className}
+        name={elementId}
+        id={elementId}
+        onSubmit={handleSubmit}
+        ref={formRef}
+      >
         <div className="grid gap-6 sm:grid-cols-2">
           <input type="hidden" name="form-name" value={elementId} />
-
-          {/* ✅ anti-bot: honeypot + timestamp */}
-          <input
-            type="text"
-            name="company"
-            tabIndex={-1}
-            autoComplete="off"
-            className="hidden"
-            aria-hidden="true"
-          />
-          <input type="hidden" name="ts" value={ts} />
-
-          {fields.map((field, index) => (
+          {fields.map((field: any, index: number) => (
             <DynamicComponent key={index} {...field} />
           ))}
         </div>
+
+        {error && (
+          <div className="mt-4 text-sm" role="alert">
+            {error}
+          </div>
+        )}
 
         <div className={classNames('mt-8', mapStyles({ textAlign: styles?.self?.textAlign ?? 'left' }))}>
           <button
