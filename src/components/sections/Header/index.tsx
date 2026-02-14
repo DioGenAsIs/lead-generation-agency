@@ -217,7 +217,7 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
         {...link}
         className={classNames(
           'text-lg inline-flex items-center justify-center',
-          inMobileMenu ? 'p-5 link-fill' : 'w-12 h-12 p-0 rounded-full hover:bg-white/10 transition'
+          inMobileMenu ? 'p-5 link-fill' : 'w-11 h-11 p-0 rounded-full hover:bg-white/10 transition'
         )}
       />
     </li>
