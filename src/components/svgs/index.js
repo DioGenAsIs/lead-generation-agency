@@ -22,6 +22,9 @@ import Send from './send';
 import Twitter from './twitter';
 import Vimeo from './vimeo';
 import YouTube from './youtube';
+import Telegram from './telegram';
+import WhatsApp from './whatsapp';
+
 
 export const iconMap = {
     apple: Apple,
@@ -47,5 +50,7 @@ export const iconMap = {
     send: Send,
     twitter: Twitter,
     vimeo: Vimeo,
-    youtube: YouTube
+    youtube: YouTube,
+    telegram: Telegram,
+    whatsapp: WhatsApp
 };
