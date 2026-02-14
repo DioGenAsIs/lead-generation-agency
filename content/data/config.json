@@ -9,7 +9,7 @@
     "isTitleVisible": true,
     "primaryLinks": [
       { "type": "Link", "label": "Услуги", "url": "/#services" },
-      { "type": "Link", "label": "Кейсы", "url": "/#cases" },
+      { "type": "Link", "label": "Кейсы", "url": "/#cases" }
     ],
     "socialLinks": [
       {
