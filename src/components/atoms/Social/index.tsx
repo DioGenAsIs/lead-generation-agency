@@ -17,7 +17,13 @@ export default function Social(props) {
                 className={classNames('inline-flex items-center justify-center no-underline', className)}
             >
                 {label && <span className="sr-only">{label}</span>}
-                {IconComponent && <IconComponent className="w-icon h-icon fill-current stroke-current" />}
+                {IconComponent && (
+                  <IconComponent
+                    className="fill-current stroke-current"
+                    style={{ width: 20, height: 20, display: 'block', shapeRendering: 'geometricPrecision' }}
+                  />
+                )}
+
             </Link>
         </Annotated>
     );
