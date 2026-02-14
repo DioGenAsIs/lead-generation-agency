@@ -19,8 +19,8 @@ export default function Social(props) {
                 {label && <span className="sr-only">{label}</span>}
                 {IconComponent && (
                   <IconComponent
-                    className="fill-current stroke-current"
-                    style={{ width: 20, height: 20, display: 'block', shapeRendering: 'geometricPrecision' }}
+                    className="fill-current"
+                    style={{ width: 24, height: 24, display: 'block', shapeRendering: 'geometricPrecision' }}
                   />
                 )}
 
