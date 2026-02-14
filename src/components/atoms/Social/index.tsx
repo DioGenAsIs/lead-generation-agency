@@ -17,7 +17,7 @@ export default function Social(props) {
                 className={classNames('inline-flex items-center justify-center no-underline', className)}
             >
                 {label && <span className="sr-only">{label}</span>}
-                {IconComponent && <IconComponent className="fill-current w-icon h-icon" />}
+                {IconComponent && <IconComponent className="w-icon h-icon fill-current stroke-current" />}
             </Link>
         </Annotated>
     );
