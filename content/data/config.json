@@ -14,15 +14,15 @@
     "socialLinks": [
       {
         "type": "Social",
-        "altText": "Telegram",
         "label": "Telegram",
+        "altText": "Telegram",
         "url": "https://t.me/YOUR_TELEGRAM",
-        "icon": "message"
+        "icon": "telegram"
       },
       {
         "type": "Social",
-        "altText": "WhatsApp",
         "label": "WhatsApp",
+        "altText": "WhatsApp",
         "url": "https://wa.me/79991234567",
         "icon": "whatsapp"
       }
