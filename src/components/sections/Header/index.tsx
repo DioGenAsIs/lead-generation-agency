@@ -12,7 +12,14 @@ export default function Header(props) {
     const { isSticky, styles = {}, ...rest } = props;
     const headerWidth = styles.self?.width ?? 'narrow';
     return (
-        <header className={classNames(isSticky ? 'sticky top-0 z-10' : 'relative', 'border-b border-current')}>
+        <header
+          className={classNames(
+            isSticky ? 'sticky top-0 z-50' : 'relative',
+            'border-b border-white/10',
+            'bg-black/35 backdrop-blur-md supports-[backdrop-filter]:bg-black/25'
+          )}
+        >
+
             <div
                 className={classNames({
                     'max-w-7xl mx-auto xl:border-x xl:border-current': headerWidth === 'narrow',
