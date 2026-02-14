@@ -3,12 +3,16 @@ const { createClient } = require('@supabase/supabase-js');
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// Лучше НЕ '*'. Поставь сюда домен сайта: https://your-site.netlify.app
+// Можно прокинуть через env, чтобы не хардкодить.
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
+
 function json(statusCode, body) {
   return {
     statusCode,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
     },
@@ -22,7 +26,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 204,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
       },
@@ -52,7 +56,7 @@ exports.handler = async (event) => {
   // Honeypot (если заполнен — почти точно бот)
   const hp = String(payload.hp || '').trim();
   if (hp) {
-    // можно "тихо" игнорировать, но лучше возвращать 204
+    // "тихо" игнорируем
     return { statusCode: 204, body: '' };
   }
 
@@ -61,22 +65,33 @@ exports.handler = async (event) => {
   if (!ts) return json(400, { error: 'Bad request' });
 
   const ageMs = Date.now() - ts;
-  // Если отправили слишком быстро — не пишем в БД и говорим “слишком быстро”
   if (ageMs < 1500) {
     return json(429, { error: 'Too fast. Please try again.' });
   }
 
-  const name = String(payload.name || '').trim() || null;
+  // Поля формы (новая схема)
+  const name = String(payload.name || '').trim();
   const phoneRaw = String(payload.phone || '').trim();
-  const telegram = String(payload.telegram || '').trim() || null;
-  const course = String(payload.course || '').trim() || null;
-  const budget = String(payload.budget || '').trim() || null;
+  const telegram = String(payload.telegram || '').trim();
+  const whatsapp = String(payload.whatsapp || '').trim();
+  const website = String(payload.website || '').trim();
+  const budget = String(payload.budget || '').trim();
   const source = String(payload.source || 'site').trim() || null;
   const utm = payload.utm ?? null;
+
+  // Валидации
+  if (!name) {
+    return json(400, { error: 'Name is required' });
+  }
 
   const phoneDigits = phoneRaw.replace(/\D/g, '');
   if (!phoneDigits || phoneDigits.length < 6) {
     return json(400, { error: 'Phone is required' });
+  }
+
+  // Нужно хотя бы одно: Telegram или WhatsApp
+  if (!telegram && !whatsapp) {
+    return json(400, { error: 'Telegram or WhatsApp is required' });
   }
 
   // Consent НЕ сохраняем в таблицу, но требуем
@@ -89,19 +104,23 @@ exports.handler = async (event) => {
     auth: { persistSession: false },
   });
 
+  const row = {
+    name,
+    phone: phoneRaw, // оставляем как ввёл пользователь
+    telegram: telegram || null,
+    whatsapp: whatsapp || null,
+    website: website || null,
+    budget: budget || null,
+    source,
+    utm,
+  };
+
+  // Если ты пока НЕ добавлял колонку website, но хочешь не терять значение:
+  // row.course = website || null;
+
   const { data, error } = await supabase
     .from('leads')
-    .insert([
-      {
-        name,
-        phone: phoneRaw, // оставляем как ввёл пользователь
-        telegram,
-        course,
-        budget,
-        source,
-        utm,
-      },
-    ])
+    .insert([row])
     .select('id');
 
   if (error) {
