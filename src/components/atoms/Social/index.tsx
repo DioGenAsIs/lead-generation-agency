@@ -20,7 +20,7 @@ export default function Social(props) {
                 {IconComponent && (
                   <IconComponent
                     className="fill-current"
-                    style={{ width: 24, height: 24, display: 'block', shapeRendering: 'geometricPrecision' }}
+                    style={{ width: 24, height: 24, display: 'block' }}
                   />
                 )}
 
