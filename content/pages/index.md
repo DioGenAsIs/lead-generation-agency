@@ -18,7 +18,7 @@ sections:
     colors: colors-f
     backgroundSize: full
     title: "Лидогенерация для бизнеса по всему миру"
-    subtitle: "Запускаем рекламу и выстраиваем систему привлечения заявок в любых странах и каналах: от лида до продажи. Оставьте заявку удобным способом: сайт / [Telegram](https://t.me/YOUR_TELEGRAM_BOT) / [WhatsApp](https://wa.me/79991234567)."
+    subtitle: 'Запускаем рекламу и выстраиваем систему привлечения заявок по всему миру. Напишите нам в <a href="https://t.me/YOUR_TELEGRAM_BOT" target="_blank" rel="noreferrer">Telegram</a> или <a href="https://wa.me/79991234567" target="_blank" rel="noreferrer">WhatsApp</a>.'
     actions:
       - type: Link
         label: Оставить заявку
