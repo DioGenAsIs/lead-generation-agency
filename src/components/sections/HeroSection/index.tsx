@@ -62,28 +62,8 @@ export default function Component(props: HeroSection) {
               </Markdown>
             </AnnotatedField>
           )}
-         
-         {/* HERO VIDEO */}
-         <div className={classNames('w-full', { 'mt-8': !!title || !!subtitle || !!text })}>
-           <div className="relative w-full overflow-hidden rounded-2xl border border-white/15 bg-black/20">
-             <div className="relative h-[110px] sm:h-[140px] md:h-[170px] lg:h-[200px] w-full">
-               <video
-                 className="absolute inset-0 h-full w-full object-cover"
-                 autoPlay
-                 muted
-                 loop
-                 playsInline
-                 preload="none"
-                 poster="/hero.png"
-               >
-                 <source src="/hero.webm" type="video/webm" />
-                 <source src="/hero.mp4" type="video/mp4" />
-               </video>
-               <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
-             </div>
-           </div>
-         </div>
 
+          {/* ACTIONS (Оставить заявку) */}
           {actions?.length > 0 && (
             <div
               className={classNames('flex flex-wrap items-center gap-4', {
@@ -97,8 +77,31 @@ export default function Component(props: HeroSection) {
               ))}
             </div>
           )}
+
+          {/* HERO VIDEO (после "Оставить заявку") */}
+          <div className="mt-6 w-full">
+            <div className="relative w-full overflow-hidden rounded-2xl border border-white/15 bg-black/20">
+              {/* Увеличивай высоту тут */}
+              <div className="relative h-[180px] sm:h-[260px] md:h-[340px] lg:h-[420px] w-full">
+                <video
+                  className="absolute inset-0 h-full w-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  poster="/hero.png"
+                >
+                  <source src="/hero.webm" type="video/webm" />
+                  <source src="/hero.mp4" type="video/mp4" />
+                </video>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
+              </div>
+            </div>
+          </div>
         </div>
 
+        {/* Правая колонка (если в контенте задано media) */}
         {media && (
           <div
             className={classNames('flex flex-1 w-full', {
@@ -106,37 +109,11 @@ export default function Component(props: HeroSection) {
               'justify-end': sectionAlign === 'right'
             })}
           >
-            <HeroMedia media={media} />
+            <DynamicComponent {...media} />
           </div>
         )}
       </div>
     </Section>
-  );
-}
-
-function HeroMedia({ media }) {
-  // Если хочешь всегда показывать видео — просто return VideoHero()
-  // Если хочешь показывать видео только когда media есть — оставь как ниже.
-  return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-white/15 bg-black/20">
-      <div className="relative aspect-[16/9] w-full">
-        <video
-          className="absolute inset-0 h-full w-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          poster="/hero.png"
-        >
-          <source src="/hero.webm" type="video/webm" />
-          <source src="/hero.mp4" type="video/mp4" />
-        </video>
-
-        {/* лёгкое затемнение/читабельность */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-transparent" />
-      </div>
-    </div>
   );
 }
 
