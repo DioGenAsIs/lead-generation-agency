@@ -94,9 +94,9 @@ export default function Component(props: HeroSection) {
         )}
       </div>
 
-      {/* FULL-BLEED HERO VIDEO (always shown, AFTER actions) */}
-      <div className="mt-8 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
-        <div className="relative w-full overflow-hidden border-y border-white/10 bg-black/20">
+      {/* HERO VIDEO (container width, AFTER actions) */}
+      <div className="mt-8">
+        <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/20">
           {/* Height controls across devices */}
           <div className="relative h-[220px] sm:h-[300px] md:h-[420px] lg:h-[520px] w-full">
             <video
