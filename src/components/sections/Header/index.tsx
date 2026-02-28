@@ -61,6 +61,7 @@ function HeaderVariantA(props) {
         </ul>
       )}
 
+      {/* Desktop socials */}
       {socialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
           <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
@@ -85,6 +86,7 @@ function HeaderVariantB(props) {
         </ul>
       )}
 
+      {/* Desktop socials */}
       {socialLinks.length > 0 && (
         <ul
           className={classNames('hidden border-l border-white/10 lg:flex', {
@@ -107,6 +109,7 @@ function HeaderVariantC(props) {
     <div className="relative flex items-stretch">
       <SiteLogoLink {...logoProps} />
 
+      {/* Desktop socials */}
       {socialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
           <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
@@ -140,7 +143,21 @@ function MobileMenu(props) {
   }, [router.events]);
 
   return (
-    <div className="ml-auto lg:hidden">
+    <div className="ml-auto flex items-stretch lg:hidden">
+      {/* MOBILE socials always visible in header (left of burger) */}
+      {socialLinks.length > 0 && (
+        <div className="flex items-stretch border-l border-white/10">
+          {socialLinks.map((link, index) => (
+            <Social
+              key={index}
+              {...link}
+              className="text-white inline-flex items-center justify-center w-12 h-12 link-fill hover:bg-white/10 transition"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Burger */}
       <button
         aria-label="Open Menu"
         className="h-10 min-h-full p-4 text-lg border-l border-white/10 focus:outline-hidden"
@@ -149,6 +166,7 @@ function MobileMenu(props) {
         <MenuIcon className="fill-current w-icon h-icon" />
       </button>
 
+      {/* Overlay menu */}
       <div className={classNames('fixed inset-0 z-20 overflow-y-auto bg-main', isMenuOpen ? 'block' : 'hidden')}>
         <div className="flex flex-col min-h-full">
           <div className="flex items-stretch justify-between border-b border-white/10">
@@ -217,9 +235,7 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
         {...link}
         className={classNames(
           'text-white inline-flex items-center justify-center',
-          inMobileMenu
-            ? 'p-5 link-fill'
-            : 'w-12 h-12 p-0 link-fill hover:bg-white/10 transition'
+          inMobileMenu ? 'p-5 link-fill' : 'w-12 h-12 p-0 link-fill hover:bg-white/10 transition'
         )}
       />
     </li>
