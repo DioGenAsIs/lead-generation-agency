@@ -27,7 +27,15 @@ export default function Component(props: HeroSection) {
         <div className={classNames('flex-1 w-full', mapStyles({ textAlign: sectionAlign }))}>
           {title && (
             <AnnotatedField path=".title">
-              <h1 className="text-5xl sm:text-6xl">{title}</h1>
+              <h1
+                className="
+                  text-[clamp(36px,9vw,64px)] leading-[0.95]
+                  [hyphens:none] [word-break:normal] [overflow-wrap:normal]
+                  [text-wrap:balance]
+                "
+              >
+                {title}
+              </h1>
             </AnnotatedField>
           )}
 
