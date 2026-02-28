@@ -94,7 +94,29 @@ export default function Component(props: HeroSection) {
 }
 
 function HeroMedia({ media }) {
-  return <DynamicComponent {...media} />;
+  // Если хочешь всегда показывать видео — просто return VideoHero()
+  // Если хочешь показывать видео только когда media есть — оставь как ниже.
+  return (
+    <div className="relative w-full overflow-hidden rounded-2xl border border-white/15 bg-black/20">
+      <div className="relative aspect-[16/9] w-full">
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="none"
+          poster="/hero.png"
+        >
+          <source src="/hero.webm" type="video/webm" />
+          <source src="/hero.mp4" type="video/mp4" />
+        </video>
+
+        {/* лёгкое затемнение/читабельность */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-transparent" />
+      </div>
+    </div>
+  );
 }
 
 function mapFlexDirectionStyles(flexDirection?: 'row' | 'row-reverse' | 'col' | 'col-reverse') {
