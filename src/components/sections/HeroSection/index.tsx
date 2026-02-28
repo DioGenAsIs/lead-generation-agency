@@ -62,6 +62,27 @@ export default function Component(props: HeroSection) {
               </Markdown>
             </AnnotatedField>
           )}
+         
+         {/* HERO VIDEO */}
+         <div className={classNames('w-full', { 'mt-8': !!title || !!subtitle || !!text })}>
+           <div className="relative w-full overflow-hidden rounded-2xl border border-white/15 bg-black/20">
+             <div className="relative h-[110px] sm:h-[140px] md:h-[170px] lg:h-[200px] w-full">
+               <video
+                 className="absolute inset-0 h-full w-full object-cover"
+                 autoPlay
+                 muted
+                 loop
+                 playsInline
+                 preload="none"
+                 poster="/hero.png"
+               >
+                 <source src="/hero.webm" type="video/webm" />
+                 <source src="/hero.mp4" type="video/mp4" />
+               </video>
+               <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
+             </div>
+           </div>
+         </div>
 
           {actions?.length > 0 && (
             <div
