@@ -56,7 +56,7 @@ export default function Component(props: HeroSection) {
                     }
                   }
                 }}
-                className={classNames('mt-4 max-w-3xl text-lg leading-relaxed text-white/85 sm:text-xl')}
+                className="mt-4 max-w-3xl text-lg leading-relaxed text-white/85 sm:text-xl"
               >
                 {subtitle}
               </Markdown>
@@ -67,14 +67,16 @@ export default function Component(props: HeroSection) {
             <AnnotatedField path=".text">
               <Markdown
                 options={{ forceBlock: true, forceWrapper: true }}
-                className={classNames('max-w-2xl text-sm text-white/70 sm:text-base', { 'mt-4': !!title || !!subtitle })}
+                className={classNames('max-w-2xl text-sm text-white/70 sm:text-base', {
+                  'mt-4': !!title || !!subtitle
+                })}
               >
                 {text}
               </Markdown>
             </AnnotatedField>
           )}
 
-          {actions?.length > 0 && (
+          {actions.length > 0 && (
             <div
               className={classNames('mt-8 flex flex-wrap items-center gap-3', {
                 'justify-center': sectionAlign === 'center',
@@ -82,17 +84,16 @@ export default function Component(props: HeroSection) {
               })}
             >
               {actions.map((action, index) => {
-                const isSecondaryButton = action.type === 'Button' && action.style === 'secondary';
+                const isSecondary = action.type === 'Button' && action.style === 'secondary';
 
                 return (
                   <Action
                     key={index}
                     {...action}
                     className={classNames(
-                      isSecondaryButton
+                      isSecondary
                         ? 'rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
-                        : 'rounded-xl border border-transparent bg-violet-500 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white shadow-lg shadow-violet-500/30 hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                      action.className
+                        : 'rounded-xl border border-transparent bg-violet-500 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white shadow-lg shadow-violet-500/30 hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
                     )}
                     onClick={() =>
                       trackConversionEvent(index === 0 ? 'cta_primary_click' : 'messenger_telegram_click', {
@@ -139,7 +140,6 @@ export default function Component(props: HeroSection) {
       {/* FULL-BLEED HERO VIDEO (always shown, AFTER actions) */}
       <div className="mt-8 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
         <div className="relative w-full overflow-hidden border-y border-white/10 bg-black/20">
-          {/* Height controls across devices */}
           <div className="relative h-[220px] w-full sm:h-[300px] md:h-[420px] lg:h-[520px]">
             <video
               className="absolute inset-0 h-full w-full object-cover object-[50%_40%]"
@@ -164,7 +164,6 @@ export default function Component(props: HeroSection) {
               />
             </noscript>
 
-            {/* subtle overlay for readability / nicer look */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
           </div>
         </div>
