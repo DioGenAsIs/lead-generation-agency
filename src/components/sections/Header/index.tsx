@@ -6,7 +6,19 @@ import { Link, Social } from '@/components/atoms';
 import ImageBlock from '@/components/molecules/ImageBlock';
 import CloseIcon from '@/components/svgs/close';
 import MenuIcon from '@/components/svgs/menu';
+import { trackConversionEvent } from '@/utils/analytics';
 import HeaderLink from './HeaderLink';
+
+const supportedLanguages = ['ru', 'en', 'es'] as const;
+type SupportedLanguage = (typeof supportedLanguages)[number];
+
+function normalizeLanguage(value?: string | string[]): SupportedLanguage {
+  const v = Array.isArray(value) ? value[0] : value;
+  if (v && supportedLanguages.includes(v as SupportedLanguage)) {
+    return v as SupportedLanguage;
+  }
+  return 'ru';
+}
 
 export default function Header(props) {
   const { isSticky, styles = {}, ...rest } = props;
@@ -61,6 +73,8 @@ function HeaderVariantA(props) {
         </ul>
       )}
 
+      <LanguageSwitcher />
+
       {/* Desktop socials */}
       {socialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
@@ -86,6 +100,8 @@ function HeaderVariantB(props) {
         </ul>
       )}
 
+      <LanguageSwitcher />
+
       {/* Desktop socials */}
       {socialLinks.length > 0 && (
         <ul
@@ -108,6 +124,8 @@ function HeaderVariantC(props) {
   return (
     <div className="relative flex items-stretch">
       <SiteLogoLink {...logoProps} />
+
+      <LanguageSwitcher />
 
       {/* Desktop socials */}
       {socialLinks.length > 0 && (
@@ -152,6 +170,7 @@ function MobileMenu(props) {
               key={index}
               {...link}
               className="text-white inline-flex items-center justify-center w-12 h-12 link-fill hover:bg-white/10 transition"
+              onClick={() => trackSocialClick(link, 'header_mobile')}
             />
           ))}
         </div>
@@ -185,6 +204,8 @@ function MobileMenu(props) {
 
           {(primaryLinks.length > 0 || socialLinks.length > 0) && (
             <div className="flex flex-col items-center justify-center px-4 py-20 space-y-12 grow">
+              <LanguageSwitcher isMobile />
+
               {primaryLinks.length > 0 && (
                 <ul className="space-y-6">
                   <ListOfLinks links={primaryLinks} inMobileMenu={true} />
@@ -199,6 +220,58 @@ function MobileMenu(props) {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LanguageSwitcher({ isMobile = false }: { isMobile?: boolean }) {
+  const router = useRouter();
+  const currentLang = normalizeLanguage(router.query.lang);
+
+  function setLanguage(lang: SupportedLanguage) {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('site_lang', lang);
+    }
+
+    trackConversionEvent('language_switch', { language: lang, location: isMobile ? 'mobile_menu' : 'header' });
+
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, lang }
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  return (
+    <div
+      className={classNames('hidden items-center border-l border-white/10 px-3 py-2 lg:flex', {
+        'flex lg:hidden': isMobile
+      })}
+      aria-label="Language switcher"
+    >
+      <div className="inline-flex rounded-lg border border-white/20 bg-black/20 p-1">
+        {supportedLanguages.map((lang) => {
+          const isActive = currentLang === lang;
+
+          return (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => setLanguage(lang)}
+              className={classNames(
+                'rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-widest transition',
+                isActive ? 'bg-white text-black' : 'text-white/80 hover:bg-white/10 hover:text-white'
+              )}
+              aria-pressed={isActive}
+            >
+              {lang.toUpperCase()}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -222,6 +295,13 @@ function ListOfLinks({ links, inMobileMenu }) {
     <li key={index} className={classNames(inMobileMenu ? 'text-center w-full' : 'inline-flex items-stretch')}>
       <HeaderLink
         {...link}
+        onClick={() =>
+          trackConversionEvent('nav_click', {
+            location: inMobileMenu ? 'mobile_menu' : 'header',
+            label: link.label || '',
+            url: link.url || ''
+          })
+        }
         className={classNames(inMobileMenu ? 'text-xl bottom-shadow-1 hover:bottom-shadow-5' : 'p-4 link-fill')}
       />
     </li>
@@ -233,6 +313,7 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
     <li key={index} className="inline-flex items-stretch">
       <Social
         {...link}
+        onClick={() => trackSocialClick(link, inMobileMenu ? 'mobile_menu' : 'header')}
         className={classNames(
           'text-white inline-flex items-center justify-center',
           inMobileMenu ? 'p-5 link-fill' : 'w-12 h-12 p-0 link-fill hover:bg-white/10 transition'
@@ -240,4 +321,18 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
       />
     </li>
   ));
+}
+
+function trackSocialClick(link, location: string) {
+  const eventNameByIcon = {
+    telegram: 'messenger_telegram_click',
+    whatsapp: 'messenger_whatsapp_click'
+  };
+
+  trackConversionEvent(eventNameByIcon[link.icon] || 'social_click', {
+    location,
+    label: link.label || '',
+    url: link.url || '',
+    icon: link.icon || ''
+  });
 }

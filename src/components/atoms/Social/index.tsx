@@ -5,7 +5,7 @@ import { iconMap } from '@/components/svgs';
 import Link from '../Link';
 
 export default function Social(props) {
-    const { elementId, className, label, altText, url, icon = 'facebook' } = props;
+    const { elementId, className, label, altText, url, icon = 'facebook', ...rest } = props;
     const IconComponent = iconMap[icon];
 
     return (
@@ -15,6 +15,7 @@ export default function Social(props) {
                 aria-label={altText}
                 id={elementId || null}
                 className={classNames('inline-flex items-center justify-center no-underline', className)}
+                {...rest}
             >
                 {label && <span className="sr-only">{label}</span>}
                 {IconComponent && (

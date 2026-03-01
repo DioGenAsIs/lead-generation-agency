@@ -11,12 +11,12 @@
       {
         "type": "Link",
         "label": "Услуги",
-        "url": "/#services"
+        "url": "/services"
       },
       {
         "type": "Link",
         "label": "Кейсы",
-        "url": "/#cases"
+        "url": "/cases"
       }
     ],
     "socialLinks": [
@@ -26,6 +26,13 @@
         "altText": "Telegram",
         "url": "https://t.me/YOUR_TELEGRAM",
         "icon": "telegram"
+      },
+      {
+        "type": "Social",
+        "label": "WhatsApp",
+        "altText": "WhatsApp",
+        "url": "https://wa.me/79991234567",
+        "icon": "whatsapp"
       }
     ],
     "styles": {
@@ -40,13 +47,13 @@
       {
         "type": "Link",
         "label": "Услуги",
-        "url": "/#services",
+        "url": "/services",
         "altText": ""
       },
       {
         "type": "Link",
         "label": "Кейсы",
-        "url": "/#cases",
+        "url": "/cases",
         "altText": ""
       },
       {
@@ -59,6 +66,12 @@
         "type": "Link",
         "label": "Написать в Telegram",
         "url": "https://t.me/YOUR_TELEGRAM",
+        "altText": ""
+      },
+      {
+        "type": "Link",
+        "label": "Написать в WhatsApp",
+        "url": "https://wa.me/79991234567",
         "altText": ""
       }
     ],

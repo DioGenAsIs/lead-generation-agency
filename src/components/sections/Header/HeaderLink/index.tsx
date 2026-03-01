@@ -5,7 +5,7 @@ import Link from '@/components/atoms/Link';
 import { iconMap } from '@/components/svgs';
 
 export default function HeaderLink(props) {
-    const { elementId, className, label, altText, url, showIcon, icon, iconPosition = 'right' } = props;
+    const { elementId, className, label, altText, url, showIcon, icon, iconPosition = 'right', ...rest } = props;
     const IconComponent = icon ? iconMap[icon] : null;
 
     return (
@@ -18,6 +18,7 @@ export default function HeaderLink(props) {
                     'relative inline-flex items-center justify-center gap-1.5 text-center leading-tight uppercase tracking-widest no-underline',
                     className
                 )}
+                {...rest}
             >
                 {label}
                 {showIcon && IconComponent && (
