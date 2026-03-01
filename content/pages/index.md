@@ -17,13 +17,18 @@ sections:
     elementId: hero
     colors: colors-f
     backgroundSize: full
-    title: "Лидогенерация для бизнеса по всему миру"
-    subtitle: 'Запускаем рекламу и выстраиваем систему привлечения заявок по всему миру. Напишите нам в <a href="https://t.me/YOUR_TELEGRAM_BOT" target="_blank" rel="noreferrer">Telegram</a> или <a href="https://wa.me/79991234567" target="_blank" rel="noreferrer">WhatsApp</a>.'
+    title: "Лидогенерация под ключ: реклама + аналитика + воронка продаж"
+    subtitle: 'Запускаем и ведём рекламные кампании, улучшаем конверсию посадочной страницы и настраиваем измеримую аналитику. Бесплатно: аудит и прогноз CPL за 24 часа.'
+    text: 'Ответим в рабочее время до 15 минут. Без спама — только 3 уточняющих вопроса по нише, гео и бюджету.'
     actions:
-      - type: Link
-        label: Оставить заявку
+      - type: Button
+        label: Получить аудит и план
         url: "/#lead"
-
+        style: primary
+      - type: Button
+        label: Написать в Telegram
+        url: "https://t.me/YOUR_TELEGRAM"
+        style: secondary
 
   # LEAD FORM
   - type: ContactSection
