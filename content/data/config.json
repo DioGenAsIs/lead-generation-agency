@@ -5,11 +5,19 @@
     "type": "Header",
     "headerVariant": "variant-c",
     "isSticky": true,
-    "title": "Lead Generation Agency",
+    "title": "Агентство лидогенерации",
     "isTitleVisible": true,
     "primaryLinks": [
-      { "type": "Link", "label": "Услуги", "url": "/#services" },
-      { "type": "Link", "label": "Кейсы", "url": "/#cases" }
+      {
+        "type": "Link",
+        "label": "Услуги",
+        "url": "/services"
+      },
+      {
+        "type": "Link",
+        "label": "Кейсы",
+        "url": "/cases"
+      }
     ],
     "socialLinks": [
       {
@@ -36,10 +44,36 @@
   "footer": {
     "type": "Footer",
     "primaryLinks": [
-      { "type": "Link", "label": "Услуги", "url": "/#services", "altText": "" },
-      { "type": "Link", "label": "Кейсы", "url": "/#cases", "altText": "" },
-      { "type": "Link", "label": "Оставить заявку", "url": "/#lead", "altText": "" },
-      { "type": "Link", "label": "Написать в Telegram", "url": "https://t.me/YOUR_TELEGRAM", "altText": "" }
+      {
+        "type": "Link",
+        "label": "Услуги",
+        "url": "/services",
+        "altText": ""
+      },
+      {
+        "type": "Link",
+        "label": "Кейсы",
+        "url": "/cases",
+        "altText": ""
+      },
+      {
+        "type": "Link",
+        "label": "Оставить заявку",
+        "url": "/#lead",
+        "altText": ""
+      },
+      {
+        "type": "Link",
+        "label": "Написать в Telegram",
+        "url": "https://t.me/YOUR_TELEGRAM",
+        "altText": ""
+      },
+      {
+        "type": "Link",
+        "label": "Написать в WhatsApp",
+        "url": "https://wa.me/79991234567",
+        "altText": ""
+      }
     ],
     "contacts": {
       "type": "ContactBlock",
@@ -55,7 +89,12 @@
     "styles": {
       "self": {
         "width": "narrow",
-        "padding": ["pt-16", "pb-16", "pr-4", "pl-4"]
+        "padding": [
+          "pt-16",
+          "pb-16",
+          "pr-4",
+          "pl-4"
+        ]
       }
     }
   }

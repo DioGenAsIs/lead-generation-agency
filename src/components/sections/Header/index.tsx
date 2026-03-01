@@ -1,12 +1,52 @@
 import classNames from 'classnames';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Link, Social } from '@/components/atoms';
 import ImageBlock from '@/components/molecules/ImageBlock';
 import CloseIcon from '@/components/svgs/close';
 import MenuIcon from '@/components/svgs/menu';
+import { trackConversionEvent } from '@/utils/analytics';
 import HeaderLink from './HeaderLink';
+
+const supportedLanguages = ['ru', 'en', 'es'] as const;
+type SupportedLanguage = (typeof supportedLanguages)[number];
+
+function normalizeLanguage(value?: string | string[]): SupportedLanguage {
+  const v = Array.isArray(value) ? value[0] : value;
+  if (!v) {
+    return 'ru';
+  }
+
+  const normalized = v.toLowerCase().split('-')[0] as SupportedLanguage;
+  if (supportedLanguages.includes(normalized)) {
+    return normalized;
+  }
+
+  return 'ru';
+}
+
+function detectDefaultLanguage(): SupportedLanguage {
+  if (typeof window === 'undefined') {
+    return 'ru';
+  }
+
+  const savedLangRaw = window.localStorage.getItem('site_lang') || undefined;
+  if (savedLangRaw) {
+    return normalizeLanguage(savedLangRaw);
+  }
+
+  const browserLanguages = window.navigator.languages?.length ? window.navigator.languages : [window.navigator.language];
+
+  for (const browserLanguage of browserLanguages) {
+    const detected = normalizeLanguage(browserLanguage);
+    if (detected !== 'ru' || browserLanguage?.toLowerCase().startsWith('ru')) {
+      return detected;
+    }
+  }
+
+  return 'ru';
+}
 
 export default function Header(props) {
   const { isSticky, styles = {}, ...rest } = props;
@@ -50,83 +90,104 @@ function HeaderVariants(props) {
 
 function HeaderVariantA(props) {
   const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
+  const localizedPrimaryLinks = useLocalizedLinks(primaryLinks);
+  const localizedSocialLinks = useLocalizedLinks(socialLinks);
+  const localizedLogoProps = useLocalizedHeaderLogo(logoProps);
 
   return (
     <div className="relative flex items-stretch">
-      <SiteLogoLink {...logoProps} />
+      <SiteLogoLink {...localizedLogoProps} />
 
-      {primaryLinks.length > 0 && (
+      {localizedPrimaryLinks.length > 0 && (
         <ul className="hidden border-r border-white/10 divide-x divide-white/10 lg:flex">
-          <ListOfLinks links={primaryLinks} inMobileMenu={false} />
+          <ListOfLinks links={localizedPrimaryLinks} inMobileMenu={false} />
         </ul>
       )}
 
       {/* Desktop socials */}
-      {socialLinks.length > 0 && (
+      {localizedSocialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
-          <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
+          <ListOfSocialLinks links={localizedSocialLinks} inMobileMenu={false} />
         </ul>
       )}
 
-      {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
+      <LanguageSwitcher />
+
+      {(localizedPrimaryLinks.length > 0 || localizedSocialLinks.length > 0) && (
+        <MobileMenu {...props} primaryLinks={localizedPrimaryLinks} socialLinks={localizedSocialLinks} {...localizedLogoProps} />
+      )}
     </div>
   );
 }
 
 function HeaderVariantB(props) {
   const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
+  const localizedPrimaryLinks = useLocalizedLinks(primaryLinks);
+  const localizedSocialLinks = useLocalizedLinks(socialLinks);
+  const localizedLogoProps = useLocalizedHeaderLogo(logoProps);
 
   return (
     <div className="relative flex items-stretch">
-      <SiteLogoLink {...logoProps} />
+      <SiteLogoLink {...localizedLogoProps} />
 
-      {primaryLinks.length > 0 && (
+      {localizedPrimaryLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 divide-x divide-white/10 lg:flex">
-          <ListOfLinks links={primaryLinks} inMobileMenu={false} />
+          <ListOfLinks links={localizedPrimaryLinks} inMobileMenu={false} />
         </ul>
       )}
 
       {/* Desktop socials */}
-      {socialLinks.length > 0 && (
+      {localizedSocialLinks.length > 0 && (
         <ul
           className={classNames('hidden border-l border-white/10 lg:flex', {
-            'ml-auto': primaryLinks.length === 0
+            'ml-auto': localizedPrimaryLinks.length === 0
           })}
         >
-          <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
+          <ListOfSocialLinks links={localizedSocialLinks} inMobileMenu={false} />
         </ul>
       )}
 
-      {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
+      <LanguageSwitcher />
+
+      {(localizedPrimaryLinks.length > 0 || localizedSocialLinks.length > 0) && (
+        <MobileMenu {...props} primaryLinks={localizedPrimaryLinks} socialLinks={localizedSocialLinks} {...localizedLogoProps} />
+      )}
     </div>
   );
 }
 
 function HeaderVariantC(props) {
   const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
+  const localizedPrimaryLinks = useLocalizedLinks(primaryLinks);
+  const localizedSocialLinks = useLocalizedLinks(socialLinks);
+  const localizedLogoProps = useLocalizedHeaderLogo(logoProps);
 
   return (
     <div className="relative flex items-stretch">
-      <SiteLogoLink {...logoProps} />
+      <SiteLogoLink {...localizedLogoProps} />
 
       {/* Desktop socials */}
-      {socialLinks.length > 0 && (
+      {localizedSocialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
-          <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
+          <ListOfSocialLinks links={localizedSocialLinks} inMobileMenu={false} />
         </ul>
       )}
 
-      {primaryLinks.length > 0 && (
+      {localizedPrimaryLinks.length > 0 && (
         <ul
           className={classNames('hidden border-l border-white/10 divide-x divide-white/10 lg:flex', {
-            'ml-auto': primaryLinks.length === 0
+            'ml-auto': localizedPrimaryLinks.length === 0
           })}
         >
-          <ListOfLinks links={primaryLinks} inMobileMenu={false} />
+          <ListOfLinks links={localizedPrimaryLinks} inMobileMenu={false} />
         </ul>
       )}
 
-      {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
+      <LanguageSwitcher />
+
+      {(localizedPrimaryLinks.length > 0 || localizedSocialLinks.length > 0) && (
+        <MobileMenu {...props} primaryLinks={localizedPrimaryLinks} socialLinks={localizedSocialLinks} {...localizedLogoProps} />
+      )}
     </div>
   );
 }
@@ -152,10 +213,13 @@ function MobileMenu(props) {
               key={index}
               {...link}
               className="text-white inline-flex items-center justify-center w-12 h-12 link-fill hover:bg-white/10 transition"
+              onClick={() => trackSocialClick(link, 'header_mobile')}
             />
           ))}
         </div>
       )}
+
+      <LanguageSwitcher isMobile compact />
 
       {/* Burger */}
       <button
@@ -185,6 +249,8 @@ function MobileMenu(props) {
 
           {(primaryLinks.length > 0 || socialLinks.length > 0) && (
             <div className="flex flex-col items-center justify-center px-4 py-20 space-y-12 grow">
+              <LanguageSwitcher isMobile inMenu />
+
               {primaryLinks.length > 0 && (
                 <ul className="space-y-6">
                   <ListOfLinks links={primaryLinks} inMobileMenu={true} />
@@ -199,6 +265,81 @@ function MobileMenu(props) {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LanguageSwitcher({ isMobile = false, compact = false, inMenu = false }: { isMobile?: boolean; compact?: boolean; inMenu?: boolean }) {
+  const router = useRouter();
+  const currentLang = useMemo(() => normalizeLanguage(router.query.lang), [router.query.lang]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || router.query.lang) {
+      return;
+    }
+
+    const preferredLang = detectDefaultLanguage();
+    if (preferredLang === currentLang) {
+      return;
+    }
+
+    router.replace(
+      { pathname: router.pathname, query: { ...router.query, lang: preferredLang }, hash: window.location.hash.slice(1) || undefined },
+      undefined,
+      { shallow: true }
+    );
+  }, [currentLang, router]);
+
+  return (
+    <div
+      className={classNames('items-center border-white/10', {
+        'hidden lg:flex border-l px-3': !isMobile,
+        'flex lg:hidden border-l px-3': isMobile && !compact,
+        'flex lg:hidden border-l': compact
+      })}
+    >
+      <label htmlFor={compact ? 'lang-mobile-compact' : isMobile ? 'lang-mobile' : 'lang-desktop'} className="sr-only">
+        Language
+      </label>
+      <div className="relative">
+        {compact && (
+          <span className="pointer-events-none inline-flex h-10 min-h-full items-center gap-1 px-3 text-xs uppercase tracking-widest">
+            🌐 {currentLang}
+          </span>
+        )}
+
+        <select
+          id={compact ? 'lang-mobile-compact' : isMobile ? 'lang-mobile' : 'lang-desktop'}
+          className={classNames(
+            'uppercase tracking-widest',
+            compact
+              ? 'absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0'
+              : 'appearance-none rounded-md border border-white/20 bg-black/30 py-1 pl-2 pr-7 text-xs'
+          )}
+          value={currentLang}
+          onChange={(e) => {
+            const lang = normalizeLanguage(e.target.value);
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('site_lang', lang);
+            }
+            trackConversionEvent('language_switch', { language: lang, location: inMenu ? 'mobile_menu' : compact ? 'header_mobile' : 'header' });
+            router.push(
+              {
+                pathname: router.pathname,
+                query: { ...router.query, lang }
+              },
+              undefined,
+              { shallow: true }
+            );
+          }}
+        >
+          <option value="ru">RU</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+
+        {!compact && <span className="pointer-events-none absolute inset-y-0 right-2 inline-flex items-center text-[10px]">▾</span>}
       </div>
     </div>
   );
@@ -222,6 +363,13 @@ function ListOfLinks({ links, inMobileMenu }) {
     <li key={index} className={classNames(inMobileMenu ? 'text-center w-full' : 'inline-flex items-stretch')}>
       <HeaderLink
         {...link}
+        onClick={() =>
+          trackConversionEvent('nav_click', {
+            location: inMobileMenu ? 'mobile_menu' : 'header',
+            label: link.label || '',
+            url: link.url || ''
+          })
+        }
         className={classNames(inMobileMenu ? 'text-xl bottom-shadow-1 hover:bottom-shadow-5' : 'p-4 link-fill')}
       />
     </li>
@@ -233,6 +381,7 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
     <li key={index} className="inline-flex items-stretch">
       <Social
         {...link}
+        onClick={() => trackSocialClick(link, inMobileMenu ? 'mobile_menu' : 'header')}
         className={classNames(
           'text-white inline-flex items-center justify-center',
           inMobileMenu ? 'p-5 link-fill' : 'w-12 h-12 p-0 link-fill hover:bg-white/10 transition'
@@ -240,4 +389,85 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
       />
     </li>
   ));
+}
+
+function trackSocialClick(link, location: string) {
+  const eventNameByIcon = {
+    telegram: 'messenger_telegram_click',
+    whatsapp: 'messenger_whatsapp_click'
+  };
+
+  trackConversionEvent(eventNameByIcon[link.icon] || 'social_click', {
+    location,
+    label: link.label || '',
+    url: link.url || '',
+    icon: link.icon || ''
+  });
+}
+
+const headerTranslations = {
+  en: {
+    'Агентство лидогенерации': 'Lead Generation Agency',
+    Услуги: 'Services',
+    Кейсы: 'Cases'
+  },
+  es: {
+    'Агентство лидогенерации': 'Agencia de Generación de Leads',
+    Услуги: 'Servicios',
+    Кейсы: 'Casos'
+  }
+} as const;
+
+function useLocalizedLinks<T extends { label?: string; altText?: string }>(links: T[]): T[] {
+  const router = useRouter();
+  const lang = normalizeLanguage(router.query.lang);
+
+  return useMemo(() => {
+    if (lang === 'ru') {
+      return links;
+    }
+
+    return links.map((link) => {
+      const translatedLabel = translateHeaderValue(lang, link.label);
+
+      if (!translatedLabel || translatedLabel === link.label) {
+        return link;
+      }
+
+      return {
+        ...link,
+        label: translatedLabel,
+        altText: translateHeaderValue(lang, link.altText) || translatedLabel
+      };
+    });
+  }, [lang, links]);
+}
+
+function useLocalizedHeaderLogo<T extends { title?: string }>(logoProps: T): T {
+  const router = useRouter();
+  const lang = normalizeLanguage(router.query.lang);
+
+  return useMemo(() => {
+    if (lang === 'ru') {
+      return logoProps;
+    }
+
+    const translatedTitle = translateHeaderValue(lang, logoProps.title);
+    if (!translatedTitle || translatedTitle === logoProps.title) {
+      return logoProps;
+    }
+
+    return {
+      ...logoProps,
+      title: translatedTitle
+    };
+  }, [lang, logoProps]);
+}
+
+function translateHeaderValue(lang: SupportedLanguage, value?: string) {
+  if (!value || lang === 'ru') {
+    return value;
+  }
+
+  return headerTranslations[lang]?.[value] ?? value;
 }
