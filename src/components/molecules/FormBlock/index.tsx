@@ -48,11 +48,80 @@ const formTranslations = {
 };
 
 type Lang = keyof typeof formTranslations;
+const supportedLanguages: Lang[] = ['ru', 'en', 'es'];
+
+const formContentTranslations = {
+  en: {
+    'Имя': 'Name',
+    'Имя (обязательно)': 'Name (required)',
+    'Телефон': 'Phone',
+    'Телефон (обязательно)': 'Phone (required)',
+    'Telegram @username (если нет WhatsApp)': 'Telegram @username (if no WhatsApp)',
+    'WhatsApp (номер, если нет Telegram)': 'WhatsApp (number, if no Telegram)',
+    'Ссылка на сайт': 'Website URL',
+    'Ссылка на сайт (опционально)': 'Website URL (optional)',
+    'Бюджет': 'Budget',
+    'Бюджет в день (опционально)': 'Daily budget (optional)',
+    'Согласен на обработку персональных данных': 'I agree to the processing of personal data',
+    'Отправить заявку 🚀': 'Send request 🚀',
+    'Отправить': 'Send'
+  },
+  es: {
+    'Имя': 'Nombre',
+    'Имя (обязательно)': 'Nombre (obligatorio)',
+    'Телефон': 'Teléfono',
+    'Телефон (обязательно)': 'Teléfono (obligatorio)',
+    'Telegram @username (если нет WhatsApp)': 'Telegram @usuario (si no tienes WhatsApp)',
+    'WhatsApp (номер, если нет Telegram)': 'WhatsApp (número, si no tienes Telegram)',
+    'Ссылка на сайт': 'Enlace del sitio',
+    'Ссылка на сайт (опционально)': 'Enlace del sitio (opcional)',
+    'Бюджет': 'Presupuesto',
+    'Бюджет в день (опционально)': 'Presupuesto diario (opcional)',
+    'Согласен на обработку персональных данных': 'Acepto el tratamiento de datos personales',
+    'Отправить заявку 🚀': 'Enviar solicitud 🚀',
+    'Отправить': 'Enviar'
+  }
+} as const;
+
+type ContentLang = keyof typeof formContentTranslations;
 
 function normalizeLanguage(value?: string | string[]): Lang {
   const v = Array.isArray(value) ? value[0] : value;
-  if (v === 'en' || v === 'es') return v;
+  if (!v) return 'ru';
+  const normalized = v.toLowerCase().split('-')[0] as Lang;
+  if (supportedLanguages.includes(normalized)) return normalized;
   return 'ru';
+}
+
+function detectDefaultLanguage(): Lang {
+  if (typeof window === 'undefined') {
+    return 'ru';
+  }
+
+  const saved = normalizeLanguage(window.localStorage.getItem('site_lang') || undefined);
+  if (saved !== 'ru' || window.localStorage.getItem('site_lang') === 'ru') {
+    return saved;
+  }
+
+  const browserLanguages = window.navigator.languages?.length ? window.navigator.languages : [window.navigator.language];
+
+  for (const browserLanguage of browserLanguages) {
+    const detected = normalizeLanguage(browserLanguage);
+    if (detected !== 'ru' || browserLanguage?.toLowerCase().startsWith('ru')) {
+      return detected;
+    }
+  }
+
+  return 'ru';
+}
+
+function translateFormContent(lang: Lang, value: string | undefined) {
+  if (!value || lang === 'ru') {
+    return value;
+  }
+
+  const contentLang = lang as ContentLang;
+  return formContentTranslations[contentLang]?.[value as keyof (typeof formContentTranslations)['en']] ?? value;
 }
 
 function tr(lang: Lang, key: keyof (typeof formTranslations)['ru']) {
@@ -80,7 +149,24 @@ export default function FormBlock(props: Props) {
   const { elementId = '', className, fields = [], submitLabel = 'Отправить', styles = {} } = props;
 
   const router = useRouter();
-  const lang = normalizeLanguage(router.query.lang);
+  const [fallbackLang, setFallbackLang] = React.useState<Lang>('ru');
+
+  React.useEffect(() => {
+    setFallbackLang(detectDefaultLanguage());
+  }, []);
+
+  const lang = router.query.lang ? normalizeLanguage(router.query.lang) : fallbackLang;
+  const localizedFields = React.useMemo(
+    () =>
+      fields.map((field) => ({
+        ...field,
+        label: translateFormContent(lang, field.label),
+        placeholder: translateFormContent(lang, field.placeholder)
+      })),
+    [fields, lang]
+  );
+
+  const localizedSubmitLabel = translateFormContent(lang, submitLabel) || submitLabel;
 
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const tsRef = React.useRef<number>(Date.now()); // ставим на загрузке компонента
@@ -198,7 +284,7 @@ export default function FormBlock(props: Props) {
           {/* honeypot поле (невидимое) */}
           <input type="text" name="hp" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
-          {fields.map((field, idx) => (
+          {localizedFields.map((field, idx) => (
             <DynamicComponent key={idx} {...field} />
           ))}
         </div>
@@ -217,7 +303,7 @@ export default function FormBlock(props: Props) {
               isSubmitting && 'cursor-not-allowed opacity-60'
             )}
           >
-            {isSubmitting ? tr(lang, 'submitting') : submitLabel}
+            {isSubmitting ? tr(lang, 'submitting') : localizedSubmitLabel}
           </button>
         </div>
       </form>
