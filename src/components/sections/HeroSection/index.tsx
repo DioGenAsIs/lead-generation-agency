@@ -19,6 +19,15 @@ export default function Component(props: HeroSection) {
   const { elementId, colors, backgroundSize, title, subtitle, text, media, actions = [], styles = {} } = props;
   const router = useRouter();
   const lang = normalizeLanguage(router.query.lang);
+  const localizedContent = getLocalizedHeroContent(elementId, lang);
+
+  const resolvedTitle = localizedContent?.title ?? title;
+  const resolvedSubtitle = localizedContent?.subtitle ?? subtitle;
+  const resolvedText = localizedContent?.text ?? text;
+  const resolvedActions = actions.map((action, index) => ({
+    ...action,
+    label: localizedContent?.actions?.[index] ?? action.label
+  }));
 
   const sectionFlexDirection = styles.self?.flexDirection ?? 'row';
   const sectionAlign = styles.self?.textAlign ?? 'left';
@@ -29,7 +38,7 @@ export default function Component(props: HeroSection) {
       <div className={classNames('flex gap-8', mapFlexDirectionStyles(sectionFlexDirection))}>
         {/* Left column */}
         <div className={classNames('flex-1 w-full', mapStyles({ textAlign: sectionAlign }))}>
-          {title && (
+          {resolvedTitle && (
             <AnnotatedField path=".title">
               <h1
                 className="
@@ -38,12 +47,12 @@ export default function Component(props: HeroSection) {
                   [text-wrap:balance]
                 "
               >
-                {title}
+                {resolvedTitle}
               </h1>
             </AnnotatedField>
           )}
 
-          {subtitle && (
+          {resolvedSubtitle && (
             <AnnotatedField path=".subtitle">
               <Markdown
                 options={{
@@ -61,32 +70,32 @@ export default function Component(props: HeroSection) {
                 }}
                 className="mt-4 max-w-3xl text-lg leading-relaxed text-white/85 sm:text-xl"
               >
-                {subtitle}
+                {resolvedSubtitle}
               </Markdown>
             </AnnotatedField>
           )}
 
-          {text && (
+          {resolvedText && (
             <AnnotatedField path=".text">
               <Markdown
                 options={{ forceBlock: true, forceWrapper: true }}
                 className={classNames('max-w-2xl text-sm text-white/70 sm:text-base', {
-                  'mt-4': !!title || !!subtitle
+                  'mt-4': !!resolvedTitle || !!resolvedSubtitle
                 })}
               >
-                {text}
+                {resolvedText}
               </Markdown>
             </AnnotatedField>
           )}
 
-          {actions.length > 0 && (
+          {resolvedActions.length > 0 && (
             <div
               className={classNames('mt-8 flex flex-wrap items-center gap-3', {
                 'justify-center': sectionAlign === 'center',
                 'justify-end': sectionAlign === 'right'
               })}
             >
-              {actions.map((action, index) => {
+              {resolvedActions.map((action, index) => {
                 const isSecondary = action.type === 'Button' && action.style === 'secondary';
 
                 return (
@@ -214,6 +223,25 @@ const heroTranslations = {
   }
 };
 
+const heroContentTranslations = {
+  hero: {
+    en: {
+      title: 'Lead generation turnkey: ads + analytics + sales funnel',
+      subtitle:
+        'We launch and manage ad campaigns, improve landing-page conversion, and set up measurable analytics. CPL forecast within 24 hours after receiving your brief: niche, geo, budget, website/offer.',
+      text: 'We usually reply within 15 minutes during business hours. No spam — only 3 clarifying questions about niche, geo, and budget.',
+      actions: ['Get audit and plan', 'Message us on Telegram', 'Message us on WhatsApp']
+    },
+    es: {
+      title: 'Generación de leads llave en mano: anuncios + analítica + embudo de ventas',
+      subtitle:
+        'Lanzamos y gestionamos campañas de anuncios, mejoramos la conversión de la landing y configuramos analítica medible. Pronóstico de CPL en 24 horas tras recibir tu brief: nicho, geografía, presupuesto, sitio/oferta.',
+      text: 'Solemos responder en 15 minutos durante el horario laboral. Sin spam: solo 3 preguntas de aclaración sobre nicho, geografía y presupuesto.',
+      actions: ['Recibir auditoría y plan', 'Escribir en Telegram', 'Escribir en WhatsApp']
+    }
+  }
+} as const;
+
 type Lang = keyof typeof heroTranslations;
 
 function normalizeLanguage(value?: string | string[]): Lang {
@@ -224,6 +252,14 @@ function normalizeLanguage(value?: string | string[]): Lang {
 
 function t(lang: Lang, key: keyof (typeof heroTranslations)['ru']) {
   return heroTranslations[lang][key];
+}
+
+function getLocalizedHeroContent(elementId: string | undefined, lang: Lang) {
+  if (!elementId || lang === 'ru') {
+    return null;
+  }
+
+  return heroContentTranslations[elementId]?.[lang] ?? null;
 }
 
 function mapFlexDirectionStyles(flexDirection?: 'row' | 'row-reverse' | 'col' | 'col-reverse') {
