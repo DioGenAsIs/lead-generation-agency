@@ -34,30 +34,6 @@ sections:
         url: "https://wa.me/79991234567"
         style: secondary
 
-
-  # SERVICES
-  - type: TextSection
-    elementId: services
-    colors: colors-f
-    title: "Услуги"
-    subtitle: "Что делаем под задачу лидогенерации"
-    text: |
-      - Поиск точек роста и аудит воронки.
-      - Запуск performance-рекламы и тест гипотез.
-      - Настройка сквозной аналитики, отчётов по лидам и CPL.
-      - Оптимизация посадочных страниц и квалификации заявок.
-
-  # CASES
-  - type: TextSection
-    elementId: cases
-    colors: colors-f
-    title: "Кейсы"
-    subtitle: "Примеры сценариев, которые мы ведём"
-    text: |
-      - B2B SaaS: снизили CPL на 32% за 6 недель.
-      - Образование: увеличили долю квалифицированных лидов с 41% до 63%.
-      - Производство: настроили поток заявок в 3 гео с единым дашбордом.
-
   # LEAD FORM
   - type: ContactSection
     elementId: lead

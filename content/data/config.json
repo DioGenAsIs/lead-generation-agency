@@ -11,12 +11,12 @@
       {
         "type": "Link",
         "label": "Услуги",
-        "url": "/#services"
+        "url": "/services"
       },
       {
         "type": "Link",
         "label": "Кейсы",
-        "url": "/#cases"
+        "url": "/cases"
       }
     ],
     "socialLinks": [
@@ -47,13 +47,13 @@
       {
         "type": "Link",
         "label": "Услуги",
-        "url": "/#services",
+        "url": "/services",
         "altText": ""
       },
       {
         "type": "Link",
         "label": "Кейсы",
-        "url": "/#cases",
+        "url": "/cases",
         "altText": ""
       },
       {
