@@ -1,10 +1,63 @@
 import classNames from 'classnames';
 import * as React from 'react';
+import { useRouter } from 'next/router';
 
 import { Annotated } from '@/components/Annotated';
 import { DynamicComponent } from '@/components/components-registry';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 import { trackConversionEvent } from '@/utils/analytics';
+
+
+const formTranslations = {
+  ru: {
+    ok: 'Ок ✅',
+    nameRequired: 'Укажите имя',
+    phoneRequired: 'Укажите телефон',
+    contactRequired: 'Укажите Telegram или WhatsApp — любой один способ связи',
+    consentRequired: 'Нужно согласие на обработку данных',
+    submitError: 'Ошибка отправки заявки',
+    submitSuccess: 'Заявка отправлена 🚀',
+    submitting: 'Отправляем…',
+    errorPrefix: 'Ошибка',
+    somethingWrong: 'что-то пошло не так'
+  },
+  en: {
+    ok: 'Done ✅',
+    nameRequired: 'Please enter your name',
+    phoneRequired: 'Please enter your phone number',
+    contactRequired: 'Provide Telegram or WhatsApp — at least one contact method',
+    consentRequired: 'Consent to personal data processing is required',
+    submitError: 'Submission failed',
+    submitSuccess: 'Request sent 🚀',
+    submitting: 'Sending…',
+    errorPrefix: 'Error',
+    somethingWrong: 'something went wrong'
+  },
+  es: {
+    ok: 'Listo ✅',
+    nameRequired: 'Indica tu nombre',
+    phoneRequired: 'Indica tu teléfono',
+    contactRequired: 'Indica Telegram o WhatsApp — al menos un canal de contacto',
+    consentRequired: 'Se requiere consentimiento para el tratamiento de datos',
+    submitError: 'Error al enviar la solicitud',
+    submitSuccess: 'Solicitud enviada 🚀',
+    submitting: 'Enviando…',
+    errorPrefix: 'Error',
+    somethingWrong: 'algo salió mal'
+  }
+};
+
+type Lang = keyof typeof formTranslations;
+
+function normalizeLanguage(value?: string | string[]): Lang {
+  const v = Array.isArray(value) ? value[0] : value;
+  if (v === 'en' || v === 'es') return v;
+  return 'ru';
+}
+
+function tr(lang: Lang, key: keyof (typeof formTranslations)['ru']) {
+  return formTranslations[lang][key];
+}
 
 type Props = {
   elementId?: string;
@@ -26,6 +79,9 @@ function digitsCount(s: string) {
 export default function FormBlock(props: Props) {
   const { elementId = '', className, fields = [], submitLabel = 'Отправить', styles = {} } = props;
 
+  const router = useRouter();
+  const lang = normalizeLanguage(router.query.lang);
+
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const tsRef = React.useRef<number>(Date.now()); // ставим на загрузке компонента
   const formStartTrackedRef = React.useRef(false);
@@ -42,7 +98,7 @@ export default function FormBlock(props: Props) {
 
     // Для НЕ-лидовых форм — просто “Ок”
     if (!isLeadForm) {
-      alert('Ок ✅');
+      alert(tr(lang, 'ok'));
       formRef.current.reset();
       return;
     }
@@ -64,22 +120,22 @@ export default function FormBlock(props: Props) {
 
       // ✅ Валидация по требованиям
       if (!name) {
-        alert('Укажите имя');
+        alert(tr(lang, 'nameRequired'));
         return;
       }
 
       if (!phone || digitsCount(phone) < 6) {
-        alert('Укажите телефон');
+        alert(tr(lang, 'phoneRequired'));
         return;
       }
 
       if (!telegram && !whatsapp) {
-        alert('Укажите Telegram или WhatsApp — любой один способ связи');
+        alert(tr(lang, 'contactRequired'));
         return;
       }
 
       if (!consentChecked) {
-        alert('Нужно согласие на обработку данных');
+        alert(tr(lang, 'consentRequired'));
         return;
       }
 
@@ -105,17 +161,17 @@ export default function FormBlock(props: Props) {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(err?.error ? `Ошибка: ${err.error}` : 'Ошибка отправки заявки');
+        alert(err?.error ? `${tr(lang, 'errorPrefix')}: ${err.error}` : tr(lang, 'submitError'));
         return;
       }
 
       trackConversionEvent('lead_success', { location: elementId });
-      alert('Заявка отправлена 🚀');
+      alert(tr(lang, 'submitSuccess'));
       formRef.current.reset();
       tsRef.current = Date.now(); // на случай повторной заявки
       formStartTrackedRef.current = false;
     } catch (err: any) {
-      alert(`Ошибка: ${err?.message || 'что-то пошло не так'}`);
+      alert(`${tr(lang, 'errorPrefix')}: ${err?.message || tr(lang, 'somethingWrong')}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +217,7 @@ export default function FormBlock(props: Props) {
               isSubmitting && 'cursor-not-allowed opacity-60'
             )}
           >
-            {isSubmitting ? 'Отправляем…' : submitLabel}
+            {isSubmitting ? tr(lang, 'submitting') : submitLabel}
           </button>
         </div>
       </form>
