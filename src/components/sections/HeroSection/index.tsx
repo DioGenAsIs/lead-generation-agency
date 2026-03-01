@@ -163,7 +163,7 @@ export default function Component(props: HeroSection) {
       {/* FULL-BLEED HERO VIDEO (always shown, AFTER actions) */}
       <div className="mt-8 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
         <div className="relative w-full overflow-hidden border-y border-white/10 bg-black/20">
-          <div className="relative h-[220px] w-full sm:h-[300px] md:h-[420px] lg:h-[520px]">
+          <div className="relative h-[56vw] min-h-[220px] w-full max-h-[420px] sm:h-[50vw] md:h-[44vw] lg:h-[1040px] lg:max-h-none">
             <video
               className="absolute inset-0 h-full w-full object-contain"
               autoPlay
