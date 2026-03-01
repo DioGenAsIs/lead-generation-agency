@@ -82,7 +82,7 @@ export default function Component(props: HeroSection) {
               })}
             >
               {actions.map((action, index) => {
-                const isSecondaryButton = action.type === 'Button' && 'style' in action && action.style === 'secondary';
+                const isSecondaryButton = action.type === 'Button' && action.style === 'secondary';
 
                 return (
                   <Action
@@ -91,7 +91,9 @@ export default function Component(props: HeroSection) {
                     className={classNames(
                       isSecondaryButton
                         ? 'rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
-                        : 'rounded-xl border border-transparent bg-violet-500 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white shadow-lg shadow-violet-500/30 hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white')}
+                        : 'rounded-xl border border-transparent bg-violet-500 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white shadow-lg shadow-violet-500/30 hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                      action.className
+                    )}
                     onClick={() =>
                       trackConversionEvent(index === 0 ? 'cta_primary_click' : 'messenger_telegram_click', {
                         location: 'hero',
@@ -118,9 +120,26 @@ export default function Component(props: HeroSection) {
         )}
       </div>
 
-      {/* Вернули hero-видео и картинку-постер */}
-      <div className="mt-8">
-        <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+      {/* Value props (cards) */}
+      <div className="mt-8 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-5 sm:grid-cols-3">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-wide text-white/60">Срок запуска</p>
+          <p className="mt-2 text-xl font-semibold">от 3–5 дней</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-wide text-white/60">Прозрачность</p>
+          <p className="mt-2 text-xl font-semibold">дашборд по лидам и CPL</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-wide text-white/60">Первый шаг</p>
+          <p className="mt-2 text-xl font-semibold">аудит + план за 24 часа</p>
+        </div>
+      </div>
+
+      {/* FULL-BLEED HERO VIDEO (always shown, AFTER actions) */}
+      <div className="mt-8 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
+        <div className="relative w-full overflow-hidden border-y border-white/10 bg-black/20">
+          {/* Height controls across devices */}
           <div className="relative h-[220px] w-full sm:h-[300px] md:h-[420px] lg:h-[520px]">
             <video
               className="absolute inset-0 h-full w-full object-cover object-[50%_40%]"
@@ -135,6 +154,7 @@ export default function Component(props: HeroSection) {
               <source src="/hero.webm" type="video/webm" />
               <source src="/hero.mp4" type="video/mp4" />
             </video>
+
             <noscript>
               <img
                 src="/hero.png"
@@ -143,6 +163,8 @@ export default function Component(props: HeroSection) {
                 loading="lazy"
               />
             </noscript>
+
+            {/* subtle overlay for readability / nicer look */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
           </div>
         </div>
