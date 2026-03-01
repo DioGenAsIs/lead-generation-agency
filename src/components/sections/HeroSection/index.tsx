@@ -5,6 +5,7 @@ import { AnnotatedField } from '@/components/Annotated';
 import { Action } from '@/components/atoms';
 import { DynamicComponent } from '@/components/components-registry';
 import { HeroSection } from '@/types';
+import { trackConversionEvent } from '@/utils/analytics';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
 import Section from '../Section';
 
@@ -29,7 +30,7 @@ export default function Component(props: HeroSection) {
             <AnnotatedField path=".title">
               <h1
                 className="
-                  text-[clamp(36px,9vw,64px)] leading-[0.95]
+                  max-w-[20ch] text-[clamp(34px,8vw,60px)] font-semibold leading-[1.02]
                   [hyphens:none] [word-break:normal] [overflow-wrap:normal]
                   [text-wrap:balance]
                 "
@@ -55,7 +56,9 @@ export default function Component(props: HeroSection) {
                     }
                   }
                 }}
-                className={classNames('text-xl sm:text-2xl', { 'mt-4': !!title })}
+                className={classNames('mt-4 max-w-3xl text-lg leading-relaxed text-white/85 sm:text-xl', {
+                  'mt-4': !!title
+                })}
               >
                 {subtitle}
               </Markdown>
@@ -66,24 +69,37 @@ export default function Component(props: HeroSection) {
             <AnnotatedField path=".text">
               <Markdown
                 options={{ forceBlock: true, forceWrapper: true }}
-                className={classNames('max-w-none prose sm:prose-lg', { 'mt-6': !!title || !!subtitle })}
+                className={classNames('max-w-2xl text-sm text-white/70 sm:text-base', { 'mt-4': !!title || !!subtitle })}
               >
                 {text}
               </Markdown>
             </AnnotatedField>
           )}
 
-          {/* Actions ("Оставить заявку") */}
           {actions?.length > 0 && (
             <div
-              className={classNames('flex flex-wrap items-center gap-4', {
-                'mt-8': !!title || !!subtitle || !!text,
+              className={classNames('mt-8 flex flex-wrap items-center gap-3', {
                 'justify-center': sectionAlign === 'center',
                 'justify-end': sectionAlign === 'right'
               })}
             >
               {actions.map((action, index) => (
-                <Action key={index} {...action} />
+                <Action
+                  key={index}
+                  {...action}
+                  className={classNames(
+                    action.style === 'secondary'
+                      ? 'rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+                      : 'rounded-xl border border-transparent bg-violet-500 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white shadow-lg shadow-violet-500/30 hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                    action.className
+                  )}
+                  onClick={() =>
+                    trackConversionEvent(index === 0 ? 'cta_primary_click' : 'messenger_telegram_click', {
+                      location: 'hero',
+                      label: action.label
+                    })
+                  }
+                />
               ))}
             </div>
           )}
@@ -102,27 +118,18 @@ export default function Component(props: HeroSection) {
         )}
       </div>
 
-      {/* HERO VIDEO (container width, AFTER actions) */}
-      <div className="mt-8">
-        <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-          {/* Height controls across devices */}
-          <div className="relative h-[220px] sm:h-[300px] md:h-[420px] lg:h-[520px] w-full">
-            <video
-              className="absolute inset-0 h-full w-full object-cover object-[50%_40%]"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              poster="/hero.png"
-            >
-              <source src="/hero.webm" type="video/webm" />
-              <source src="/hero.mp4" type="video/mp4" />
-            </video>
-
-            {/* subtle overlay for readability / nicer look */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
-          </div>
+      <div className="mt-8 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-5 sm:grid-cols-3">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-wide text-white/60">Срок запуска</p>
+          <p className="mt-2 text-xl font-semibold">от 3–5 дней</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-wide text-white/60">Прозрачность</p>
+          <p className="mt-2 text-xl font-semibold">дашборд по лидам и CPL</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-wide text-white/60">Первый шаг</p>
+          <p className="mt-2 text-xl font-semibold">аудит + план за 24 часа</p>
         </div>
       </div>
     </Section>

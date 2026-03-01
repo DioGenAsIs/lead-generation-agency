@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Annotated } from '@/components/Annotated';
 import { DynamicComponent } from '@/components/components-registry';
 import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-names';
+import { trackConversionEvent } from '@/utils/analytics';
 
 type Props = {
   elementId?: string;
@@ -27,6 +28,7 @@ export default function FormBlock(props: Props) {
 
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const tsRef = React.useRef<number>(Date.now()); // ставим на загрузке компонента
+  const formStartTrackedRef = React.useRef(false);
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -107,9 +109,11 @@ export default function FormBlock(props: Props) {
         return;
       }
 
+      trackConversionEvent('lead_success', { location: elementId });
       alert('Заявка отправлена 🚀');
       formRef.current.reset();
       tsRef.current = Date.now(); // на случай повторной заявки
+      formStartTrackedRef.current = false;
     } catch (err: any) {
       alert(`Ошибка: ${err?.message || 'что-то пошло не так'}`);
     } finally {
@@ -119,7 +123,19 @@ export default function FormBlock(props: Props) {
 
   return (
     <Annotated content={props as any}>
-      <form className={className} name={elementId} id={elementId} onSubmit={handleSubmit} ref={formRef}>
+      <form
+        className={className}
+        name={elementId}
+        id={elementId}
+        onSubmit={handleSubmit}
+        ref={formRef}
+        onInput={() => {
+          if (isLeadForm && !formStartTrackedRef.current) {
+            trackConversionEvent('form_start', { location: elementId });
+            formStartTrackedRef.current = true;
+          }
+        }}
+      >
         <div className="grid gap-6 sm:grid-cols-2">
           <input type="hidden" name="form-name" value={elementId} />
 
@@ -135,9 +151,14 @@ export default function FormBlock(props: Props) {
           <button
             type="submit"
             disabled={isSubmitting}
+            onClick={() => {
+              if (isLeadForm) {
+                trackConversionEvent('form_submit', { location: elementId });
+              }
+            }}
             className={classNames(
-              'inline-flex items-center justify-center px-5 py-4 text-lg transition border-2 border-current hover:bottom-shadow-6 hover:-translate-y-1.5',
-              isSubmitting && 'opacity-60 cursor-not-allowed'
+              'inline-flex items-center justify-center rounded-xl border border-transparent bg-violet-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-violet-500/30 transition hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+              isSubmitting && 'cursor-not-allowed opacity-60'
             )}
           >
             {isSubmitting ? 'Отправляем…' : submitLabel}
