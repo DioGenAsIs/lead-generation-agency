@@ -62,89 +62,104 @@ function HeaderVariants(props) {
 
 function HeaderVariantA(props) {
   const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
+  const localizedPrimaryLinks = useLocalizedLinks(primaryLinks);
+  const localizedSocialLinks = useLocalizedLinks(socialLinks);
+  const localizedLogoProps = useLocalizedHeaderLogo(logoProps);
 
   return (
     <div className="relative flex items-stretch">
-      <SiteLogoLink {...logoProps} />
+      <SiteLogoLink {...localizedLogoProps} />
 
-      {primaryLinks.length > 0 && (
+      {localizedPrimaryLinks.length > 0 && (
         <ul className="hidden border-r border-white/10 divide-x divide-white/10 lg:flex">
-          <ListOfLinks links={primaryLinks} inMobileMenu={false} />
+          <ListOfLinks links={localizedPrimaryLinks} inMobileMenu={false} />
         </ul>
       )}
 
       {/* Desktop socials */}
-      {socialLinks.length > 0 && (
+      {localizedSocialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
-          <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
+          <ListOfSocialLinks links={localizedSocialLinks} inMobileMenu={false} />
         </ul>
       )}
 
       <LanguageSwitcher />
 
-      {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
+      {(localizedPrimaryLinks.length > 0 || localizedSocialLinks.length > 0) && (
+        <MobileMenu {...props} primaryLinks={localizedPrimaryLinks} socialLinks={localizedSocialLinks} {...localizedLogoProps} />
+      )}
     </div>
   );
 }
 
 function HeaderVariantB(props) {
   const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
+  const localizedPrimaryLinks = useLocalizedLinks(primaryLinks);
+  const localizedSocialLinks = useLocalizedLinks(socialLinks);
+  const localizedLogoProps = useLocalizedHeaderLogo(logoProps);
 
   return (
     <div className="relative flex items-stretch">
-      <SiteLogoLink {...logoProps} />
+      <SiteLogoLink {...localizedLogoProps} />
 
-      {primaryLinks.length > 0 && (
+      {localizedPrimaryLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 divide-x divide-white/10 lg:flex">
-          <ListOfLinks links={primaryLinks} inMobileMenu={false} />
+          <ListOfLinks links={localizedPrimaryLinks} inMobileMenu={false} />
         </ul>
       )}
 
       {/* Desktop socials */}
-      {socialLinks.length > 0 && (
+      {localizedSocialLinks.length > 0 && (
         <ul
           className={classNames('hidden border-l border-white/10 lg:flex', {
-            'ml-auto': primaryLinks.length === 0
+            'ml-auto': localizedPrimaryLinks.length === 0
           })}
         >
-          <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
+          <ListOfSocialLinks links={localizedSocialLinks} inMobileMenu={false} />
         </ul>
       )}
 
       <LanguageSwitcher />
 
-      {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
+      {(localizedPrimaryLinks.length > 0 || localizedSocialLinks.length > 0) && (
+        <MobileMenu {...props} primaryLinks={localizedPrimaryLinks} socialLinks={localizedSocialLinks} {...localizedLogoProps} />
+      )}
     </div>
   );
 }
 
 function HeaderVariantC(props) {
   const { primaryLinks = [], socialLinks = [], ...logoProps } = props;
+  const localizedPrimaryLinks = useLocalizedLinks(primaryLinks);
+  const localizedSocialLinks = useLocalizedLinks(socialLinks);
+  const localizedLogoProps = useLocalizedHeaderLogo(logoProps);
 
   return (
     <div className="relative flex items-stretch">
-      <SiteLogoLink {...logoProps} />
+      <SiteLogoLink {...localizedLogoProps} />
 
       {/* Desktop socials */}
-      {socialLinks.length > 0 && (
+      {localizedSocialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
-          <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
+          <ListOfSocialLinks links={localizedSocialLinks} inMobileMenu={false} />
         </ul>
       )}
 
-      {primaryLinks.length > 0 && (
+      {localizedPrimaryLinks.length > 0 && (
         <ul
           className={classNames('hidden border-l border-white/10 divide-x divide-white/10 lg:flex', {
-            'ml-auto': primaryLinks.length === 0
+            'ml-auto': localizedPrimaryLinks.length === 0
           })}
         >
-          <ListOfLinks links={primaryLinks} inMobileMenu={false} />
+          <ListOfLinks links={localizedPrimaryLinks} inMobileMenu={false} />
         </ul>
       )}
 
       <LanguageSwitcher />
 
-      {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
+      {(localizedPrimaryLinks.length > 0 || localizedSocialLinks.length > 0) && (
+        <MobileMenu {...props} primaryLinks={localizedPrimaryLinks} socialLinks={localizedSocialLinks} {...localizedLogoProps} />
+      )}
     </div>
   );
 }
@@ -341,4 +356,71 @@ function trackSocialClick(link, location: string) {
     url: link.url || '',
     icon: link.icon || ''
   });
+}
+
+const headerTranslations = {
+  en: {
+    'Агентство лидогенерации': 'Lead Generation Agency',
+    Услуги: 'Services',
+    Кейсы: 'Cases'
+  },
+  es: {
+    'Агентство лидогенерации': 'Agencia de Generación de Leads',
+    Услуги: 'Servicios',
+    Кейсы: 'Casos'
+  }
+} as const;
+
+function useLocalizedLinks<T extends { label?: string; altText?: string }>(links: T[]): T[] {
+  const router = useRouter();
+  const lang = normalizeLanguage(router.query.lang);
+
+  return useMemo(() => {
+    if (lang === 'ru') {
+      return links;
+    }
+
+    return links.map((link) => {
+      const translatedLabel = translateHeaderValue(lang, link.label);
+
+      if (!translatedLabel || translatedLabel === link.label) {
+        return link;
+      }
+
+      return {
+        ...link,
+        label: translatedLabel,
+        altText: translateHeaderValue(lang, link.altText) || translatedLabel
+      };
+    });
+  }, [lang, links]);
+}
+
+function useLocalizedHeaderLogo<T extends { title?: string }>(logoProps: T): T {
+  const router = useRouter();
+  const lang = normalizeLanguage(router.query.lang);
+
+  return useMemo(() => {
+    if (lang === 'ru') {
+      return logoProps;
+    }
+
+    const translatedTitle = translateHeaderValue(lang, logoProps.title);
+    if (!translatedTitle || translatedTitle === logoProps.title) {
+      return logoProps;
+    }
+
+    return {
+      ...logoProps,
+      title: translatedTitle
+    };
+  }, [lang, logoProps]);
+}
+
+function translateHeaderValue(lang: SupportedLanguage, value?: string) {
+  if (!value || lang === 'ru') {
+    return value;
+  }
+
+  return headerTranslations[lang]?.[value] ?? value;
 }
