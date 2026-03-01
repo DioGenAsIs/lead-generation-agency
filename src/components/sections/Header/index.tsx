@@ -73,14 +73,14 @@ function HeaderVariantA(props) {
         </ul>
       )}
 
-      <LanguageSwitcher />
-
       {/* Desktop socials */}
       {socialLinks.length > 0 && (
         <ul className="hidden ml-auto border-l border-white/10 lg:flex">
           <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
         </ul>
       )}
+
+      <LanguageSwitcher />
 
       {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
     </div>
@@ -100,8 +100,6 @@ function HeaderVariantB(props) {
         </ul>
       )}
 
-      <LanguageSwitcher />
-
       {/* Desktop socials */}
       {socialLinks.length > 0 && (
         <ul
@@ -112,6 +110,8 @@ function HeaderVariantB(props) {
           <ListOfSocialLinks links={socialLinks} inMobileMenu={false} />
         </ul>
       )}
+
+      <LanguageSwitcher />
 
       {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
     </div>
@@ -124,8 +124,6 @@ function HeaderVariantC(props) {
   return (
     <div className="relative flex items-stretch">
       <SiteLogoLink {...logoProps} />
-
-      <LanguageSwitcher />
 
       {/* Desktop socials */}
       {socialLinks.length > 0 && (
@@ -143,6 +141,8 @@ function HeaderVariantC(props) {
           <ListOfLinks links={primaryLinks} inMobileMenu={false} />
         </ul>
       )}
+
+      <LanguageSwitcher />
 
       {(primaryLinks.length > 0 || socialLinks.length > 0) && <MobileMenu {...props} />}
     </div>
@@ -251,30 +251,34 @@ function LanguageSwitcher({ isMobile = false }: { isMobile?: boolean }) {
       <label htmlFor={isMobile ? 'lang-mobile' : 'lang-desktop'} className="sr-only">
         Language
       </label>
-      <select
-        id={isMobile ? 'lang-mobile' : 'lang-desktop'}
-        className="rounded-md border border-white/20 bg-black/30 px-2 py-1 text-xs uppercase tracking-widest"
-        value={currentLang}
-        onChange={(e) => {
-          const lang = normalizeLanguage(e.target.value);
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem('site_lang', lang);
-          }
-          trackConversionEvent('language_switch', { language: lang, location: isMobile ? 'mobile_menu' : 'header' });
-          router.push(
-            {
-              pathname: router.pathname,
-              query: { ...router.query, lang }
-            },
-            undefined,
-            { shallow: true }
-          );
-        }}
-      >
-        <option value="ru">RU</option>
-        <option value="en">EN</option>
-        <option value="es">ES</option>
-      </select>
+      <div className="relative">
+        <select
+          id={isMobile ? 'lang-mobile' : 'lang-desktop'}
+          className="appearance-none rounded-md border border-white/20 bg-black/30 py-1 pl-2 pr-7 text-xs uppercase tracking-widest"
+          value={currentLang}
+          onChange={(e) => {
+            const lang = normalizeLanguage(e.target.value);
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('site_lang', lang);
+            }
+            trackConversionEvent('language_switch', { language: lang, location: isMobile ? 'mobile_menu' : 'header' });
+            router.push(
+              {
+                pathname: router.pathname,
+                query: { ...router.query, lang }
+              },
+              undefined,
+              { shallow: true }
+            );
+          }}
+        >
+          <option value="ru">RU</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+        </select>
+
+        <span className="pointer-events-none absolute inset-y-0 right-2 inline-flex items-center text-[10px]">▾</span>
+      </div>
     </div>
   );
 }
