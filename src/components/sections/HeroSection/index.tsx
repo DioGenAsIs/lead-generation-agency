@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import Markdown from 'markdown-to-jsx';
+import { useRouter } from 'next/router';
 
 import { AnnotatedField } from '@/components/Annotated';
 import { Action } from '@/components/atoms';
@@ -16,6 +17,8 @@ import Section from '../Section';
  */
 export default function Component(props: HeroSection) {
   const { elementId, colors, backgroundSize, title, subtitle, text, media, actions = [], styles = {} } = props;
+  const router = useRouter();
+  const lang = normalizeLanguage(router.query.lang);
 
   const sectionFlexDirection = styles.self?.flexDirection ?? 'row';
   const sectionAlign = styles.self?.textAlign ?? 'left';
@@ -95,12 +98,23 @@ export default function Component(props: HeroSection) {
                         ? 'rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
                         : 'rounded-xl border border-transparent bg-violet-500 px-5 py-3 text-base font-semibold normal-case tracking-normal text-white shadow-lg shadow-violet-500/30 hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
                     )}
-                    onClick={() =>
-                      trackConversionEvent(index === 0 ? 'cta_primary_click' : 'messenger_telegram_click', {
+                    onClick={() => {
+                      const actionUrl = action.url || '';
+                      const eventName =
+                        index === 0
+                          ? 'cta_primary_click'
+                          : actionUrl.includes('wa.me')
+                            ? 'messenger_whatsapp_click'
+                            : actionUrl.includes('t.me')
+                              ? 'messenger_telegram_click'
+                              : 'cta_secondary_click';
+
+                      trackConversionEvent(eventName, {
                         location: 'hero',
-                        label: action.label
-                      })
-                    }
+                        label: action.label,
+                        url: actionUrl
+                      });
+                    }}
                   />
                 );
               })}
@@ -124,16 +138,16 @@ export default function Component(props: HeroSection) {
       {/* Value props (cards) */}
       <div className="mt-8 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-5 sm:grid-cols-3">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs uppercase tracking-wide text-white/60">Срок запуска</p>
-          <p className="mt-2 text-xl font-semibold">от 3–5 дней</p>
+          <p className="text-xs uppercase tracking-wide text-white/60">{t(lang, 'launchLabel')}</p>
+          <p className="mt-2 text-xl font-semibold">{t(lang, 'launchValue')}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs uppercase tracking-wide text-white/60">Прозрачность</p>
-          <p className="mt-2 text-xl font-semibold">дашборд по лидам и CPL</p>
+          <p className="text-xs uppercase tracking-wide text-white/60">{t(lang, 'clarityLabel')}</p>
+          <p className="mt-2 text-xl font-semibold">{t(lang, 'clarityValue')}</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-xs uppercase tracking-wide text-white/60">Первый шаг</p>
-          <p className="mt-2 text-xl font-semibold">аудит + план за 24 часа</p>
+          <p className="text-xs uppercase tracking-wide text-white/60">{t(lang, 'firstStepLabel')}</p>
+          <p className="mt-2 text-xl font-semibold">{t(lang, 'firstStepValue')}</p>
         </div>
       </div>
 
@@ -142,7 +156,7 @@ export default function Component(props: HeroSection) {
         <div className="relative w-full overflow-hidden border-y border-white/10 bg-black/20">
           <div className="relative h-[220px] w-full sm:h-[300px] md:h-[420px] lg:h-[520px]">
             <video
-              className="absolute inset-0 h-full w-full object-cover object-[50%_40%]"
+              className="absolute inset-0 h-full w-full object-contain"
               autoPlay
               muted
               loop
@@ -159,7 +173,7 @@ export default function Component(props: HeroSection) {
               <img
                 src="/hero.png"
                 alt="Иллюстрация процесса лидогенерации"
-                className="absolute inset-0 h-full w-full object-cover object-[50%_40%]"
+                className="absolute inset-0 h-full w-full object-contain"
                 loading="lazy"
               />
             </noscript>
@@ -170,6 +184,46 @@ export default function Component(props: HeroSection) {
       </div>
     </Section>
   );
+}
+
+
+const heroTranslations = {
+  ru: {
+    launchLabel: 'Срок запуска',
+    launchValue: 'от 3–5 дней',
+    clarityLabel: 'Прозрачность',
+    clarityValue: 'дашборд по лидам и CPL',
+    firstStepLabel: 'Первый шаг',
+    firstStepValue: 'прогноз CPL за 24 часа после вводных'
+  },
+  en: {
+    launchLabel: 'Launch timeline',
+    launchValue: 'from 3–5 days',
+    clarityLabel: 'Transparency',
+    clarityValue: 'dashboard with leads and CPL',
+    firstStepLabel: 'First step',
+    firstStepValue: 'CPL forecast in 24h after your brief'
+  },
+  es: {
+    launchLabel: 'Plazo de lanzamiento',
+    launchValue: 'desde 3–5 días',
+    clarityLabel: 'Transparencia',
+    clarityValue: 'dashboard de leads y CPL',
+    firstStepLabel: 'Primer paso',
+    firstStepValue: 'pronóstico de CPL en 24h tras el brief'
+  }
+};
+
+type Lang = keyof typeof heroTranslations;
+
+function normalizeLanguage(value?: string | string[]): Lang {
+  const v = Array.isArray(value) ? value[0] : value;
+  if (v === 'en' || v === 'es') return v;
+  return 'ru';
+}
+
+function t(lang: Lang, key: keyof (typeof heroTranslations)['ru']) {
+  return heroTranslations[lang][key];
 }
 
 function mapFlexDirectionStyles(flexDirection?: 'row' | 'row-reverse' | 'col' | 'col-reverse') {
