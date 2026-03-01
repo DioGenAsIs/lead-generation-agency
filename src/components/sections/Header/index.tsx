@@ -259,8 +259,9 @@ function LanguageSwitcher({ isMobile = false }: { isMobile?: boolean }) {
 
   return (
     <div
-      className={classNames('hidden lg:flex items-center border-l border-white/10 px-3', {
-        'lg:hidden flex': isMobile
+      className={classNames('items-center border-l border-white/10 px-3', {
+        'hidden lg:flex': !isMobile,
+        'flex lg:hidden': isMobile
       })}
     >
       <label htmlFor={isMobile ? 'lang-mobile' : 'lang-desktop'} className="sr-only">
