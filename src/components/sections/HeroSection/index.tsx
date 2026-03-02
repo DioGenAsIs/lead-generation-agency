@@ -113,9 +113,9 @@ export default function Component(props: HeroSection) {
                         index === 0
                           ? 'cta_primary_click'
                           : actionUrl.includes('wa.me')
-                            ? 'messenger_whatsapp_click'
+                            ? 'click_whatsapp'
                             : actionUrl.includes('t.me')
-                              ? 'messenger_telegram_click'
+                              ? 'click_telegram'
                               : 'cta_secondary_click';
 
                       trackConversionEvent(eventName, {

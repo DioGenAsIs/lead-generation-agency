@@ -56,8 +56,7 @@ exports.handler = async (event) => {
   // Honeypot (если заполнен — почти точно бот)
   const hp = String(payload.hp || '').trim();
   if (hp) {
-    // "тихо" игнорируем
-    return { statusCode: 204, body: '' };
+    return json(200, { ok: false, botBlocked: true, reason: 'honeypot' });
   }
 
   // Время на странице (ts должен быть поставлен ДО сабмита, на загрузке страницы)
@@ -66,7 +65,7 @@ exports.handler = async (event) => {
 
   const ageMs = Date.now() - ts;
   if (ageMs < 1500) {
-    return json(429, { error: 'Too fast. Please try again.' });
+    return json(429, { error: 'Too fast. Please try again.', botBlocked: true, reason: 'too_fast' });
   }
 
   // Поля формы (новая схема)
