@@ -1,12 +1,15 @@
 import { generateGlobalCssVariables } from '@/utils/theme-style-utils';
 import Script from 'next/script';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { useEffect, useRef, useState } from 'react';
 import '../css/main.css';
 
 export default function MyApp({ Component, pageProps }) {
     const { global, ...page } = pageProps;
     const { theme } = global || {};
     const [isMounted, setIsMounted] = useState(false);
+    const router = useRouter();
+    const previousUrlRef = useRef('');
 
     const cssVars = generateGlobalCssVariables(theme);
 
@@ -16,6 +19,24 @@ export default function MyApp({ Component, pageProps }) {
         window.YA_METRIKA_ID = 107082371;
     }, [page.colors]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const trackPageHit = (url) => {
+            if (typeof window.ym !== 'function') return;
+
+            const currentPath = `${window.location.origin}${url}`;
+            const referer = previousUrlRef.current || document.referrer;
+            window.ym(107082371, 'hit', currentPath, { referer });
+            previousUrlRef.current = currentPath;
+        };
+
+        previousUrlRef.current = window.location.href;
+        router.events.on('routeChangeComplete', trackPageHit);
+
+        return () => router.events.off('routeChangeComplete', trackPageHit);
+    }, [router.events]);
+
     return (
         <>
             <Script id="yandex-metrika" strategy="afterInteractive">{`
@@ -24,7 +45,7 @@ export default function MyApp({ Component, pageProps }) {
                     m[i].l=1*new Date();
                     for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
                     k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);
-                })(window, document,'script','https://mc.yandex.ru/metrika/tag.js', 'ym');
+                })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=107082371', 'ym');
 
                 ym(107082371, 'init', {
                     ssr:true,
