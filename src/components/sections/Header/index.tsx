@@ -14,9 +14,37 @@ type SupportedLanguage = (typeof supportedLanguages)[number];
 
 function normalizeLanguage(value?: string | string[]): SupportedLanguage {
   const v = Array.isArray(value) ? value[0] : value;
-  if (v && supportedLanguages.includes(v as SupportedLanguage)) {
-    return v as SupportedLanguage;
+  if (!v) {
+    return 'ru';
   }
+
+  const normalized = v.toLowerCase().split('-')[0] as SupportedLanguage;
+  if (supportedLanguages.includes(normalized)) {
+    return normalized;
+  }
+
+  return 'ru';
+}
+
+function detectDefaultLanguage(): SupportedLanguage {
+  if (typeof window === 'undefined') {
+    return 'ru';
+  }
+
+  const savedLangRaw = window.localStorage.getItem('site_lang') || undefined;
+  if (savedLangRaw) {
+    return normalizeLanguage(savedLangRaw);
+  }
+
+  const browserLanguages = window.navigator.languages?.length ? window.navigator.languages : [window.navigator.language];
+
+  for (const browserLanguage of browserLanguages) {
+    const detected = normalizeLanguage(browserLanguage);
+    if (detected !== 'ru' || browserLanguage?.toLowerCase().startsWith('ru')) {
+      return detected;
+    }
+  }
+
   return 'ru';
 }
 
@@ -191,6 +219,8 @@ function MobileMenu(props) {
         </div>
       )}
 
+      <LanguageSwitcher isMobile compact />
+
       {/* Burger */}
       <button
         aria-label="Open Menu"
@@ -219,7 +249,7 @@ function MobileMenu(props) {
 
           {(primaryLinks.length > 0 || socialLinks.length > 0) && (
             <div className="flex flex-col items-center justify-center px-4 py-20 space-y-12 grow">
-              <LanguageSwitcher isMobile />
+              <LanguageSwitcher isMobile inMenu />
 
               {primaryLinks.length > 0 && (
                 <ul className="space-y-6">
@@ -240,44 +270,60 @@ function MobileMenu(props) {
   );
 }
 
-function LanguageSwitcher({ isMobile = false }: { isMobile?: boolean }) {
+function LanguageSwitcher({ isMobile = false, compact = false, inMenu = false }: { isMobile?: boolean; compact?: boolean; inMenu?: boolean }) {
   const router = useRouter();
   const currentLang = useMemo(() => normalizeLanguage(router.query.lang), [router.query.lang]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = normalizeLanguage(window.localStorage.getItem('site_lang') || undefined);
-      if (!router.query.lang && saved !== currentLang) {
-        router.replace(
-          { pathname: router.pathname, query: { ...router.query, lang: saved }, hash: window.location.hash.slice(1) || undefined },
-          undefined,
-          { shallow: true }
-        );
-      }
+    if (typeof window === 'undefined' || router.query.lang) {
+      return;
     }
+
+    const preferredLang = detectDefaultLanguage();
+    if (preferredLang === currentLang) {
+      return;
+    }
+
+    router.replace(
+      { pathname: router.pathname, query: { ...router.query, lang: preferredLang }, hash: window.location.hash.slice(1) || undefined },
+      undefined,
+      { shallow: true }
+    );
   }, [currentLang, router]);
 
   return (
     <div
-      className={classNames('items-center border-l border-white/10 px-3', {
-        'hidden lg:flex': !isMobile,
-        'flex lg:hidden': isMobile
+      className={classNames('items-center border-white/10', {
+        'hidden lg:flex border-l px-3': !isMobile,
+        'flex lg:hidden border-l px-3': isMobile && !compact,
+        'flex lg:hidden border-l': compact
       })}
     >
-      <label htmlFor={isMobile ? 'lang-mobile' : 'lang-desktop'} className="sr-only">
+      <label htmlFor={compact ? 'lang-mobile-compact' : isMobile ? 'lang-mobile' : 'lang-desktop'} className="sr-only">
         Language
       </label>
       <div className="relative">
+        {compact && (
+          <span className="pointer-events-none inline-flex h-10 min-h-full items-center gap-1 px-3 text-xs uppercase tracking-widest">
+            🌐 {currentLang}
+          </span>
+        )}
+
         <select
-          id={isMobile ? 'lang-mobile' : 'lang-desktop'}
-          className="appearance-none rounded-md border border-white/20 bg-black/30 py-1 pl-2 pr-7 text-xs uppercase tracking-widest"
+          id={compact ? 'lang-mobile-compact' : isMobile ? 'lang-mobile' : 'lang-desktop'}
+          className={classNames(
+            'uppercase tracking-widest',
+            compact
+              ? 'absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0'
+              : 'appearance-none rounded-md border border-white/20 bg-black/30 py-1 pl-2 pr-7 text-xs'
+          )}
           value={currentLang}
           onChange={(e) => {
             const lang = normalizeLanguage(e.target.value);
             if (typeof window !== 'undefined') {
               window.localStorage.setItem('site_lang', lang);
             }
-            trackConversionEvent('language_switch', { language: lang, location: isMobile ? 'mobile_menu' : 'header' });
+            trackConversionEvent('language_switch', { language: lang, location: inMenu ? 'mobile_menu' : compact ? 'header_mobile' : 'header' });
             router.push(
               {
                 pathname: router.pathname,
@@ -293,7 +339,7 @@ function LanguageSwitcher({ isMobile = false }: { isMobile?: boolean }) {
           <option value="es">ES</option>
         </select>
 
-        <span className="pointer-events-none absolute inset-y-0 right-2 inline-flex items-center text-[10px]">▾</span>
+        {!compact && <span className="pointer-events-none absolute inset-y-0 right-2 inline-flex items-center text-[10px]">▾</span>}
       </div>
     </div>
   );
@@ -347,8 +393,8 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
 
 function trackSocialClick(link, location: string) {
   const eventNameByIcon = {
-    telegram: 'messenger_telegram_click',
-    whatsapp: 'messenger_whatsapp_click'
+    telegram: 'click_telegram',
+    whatsapp: 'click_whatsapp'
   };
 
   trackConversionEvent(eventNameByIcon[link.icon] || 'social_click', {
