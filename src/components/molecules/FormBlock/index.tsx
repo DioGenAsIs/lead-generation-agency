@@ -171,12 +171,34 @@ export default function FormBlock(props: Props) {
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const tsRef = React.useRef<number>(Date.now()); // ставим на загрузке компонента
   const formStartTrackedRef = React.useRef(false);
+  const formViewedTrackedRef = React.useRef(false);
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  if (!fields?.length) return null;
+  const hasFields = Boolean(fields?.length);
 
   const isLeadForm = elementId === 'lead-form'; // в content/pages/index.md elementId: lead-form
+
+  React.useEffect(() => {
+    if (!isLeadForm || !formRef.current || formViewedTrackedRef.current || typeof window === 'undefined') {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting && !formViewedTrackedRef.current) {
+          trackConversionEvent('lead_form_view', { location: elementId });
+          formViewedTrackedRef.current = true;
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+
+    observer.observe(formRef.current);
+
+    return () => observer.disconnect();
+  }, [elementId, isLeadForm]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -225,6 +247,24 @@ export default function FormBlock(props: Props) {
         return;
       }
 
+      const ageMs = Date.now() - tsRef.current;
+      if (ageMs < 1500) {
+        trackConversionEvent('bot_blocked', { location: elementId, reason: 'too_fast_client' });
+        alert(tr(lang, 'submitError'));
+        return;
+      }
+
+      const messengerChosen = telegram && whatsapp ? 'both' : telegram ? 'telegram' : 'whatsapp';
+      trackConversionEvent('messenger_chosen', { location: elementId, messenger: messengerChosen });
+
+      if (budget) {
+        trackConversionEvent('budget_filled', { location: elementId });
+      }
+
+      if (website) {
+        trackConversionEvent('website_filled', { location: elementId });
+      }
+
       const payload = {
         name,
         phone,
@@ -245,9 +285,16 @@ export default function FormBlock(props: Props) {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err?.error ? `${tr(lang, 'errorPrefix')}: ${err.error}` : tr(lang, 'submitError'));
+      const result = await res.json().catch(() => ({}));
+
+      if (result?.botBlocked) {
+        trackConversionEvent('bot_blocked', { location: elementId, reason: String(result?.reason || 'server_antibot') });
+        return;
+      }
+
+      if (!res.ok || !result?.ok) {
+        trackConversionEvent('lead_error', { location: elementId, reason: String(result?.error || 'request_failed') });
+        alert(result?.error ? `${tr(lang, 'errorPrefix')}: ${result.error}` : tr(lang, 'submitError'));
         return;
       }
 
@@ -257,11 +304,14 @@ export default function FormBlock(props: Props) {
       tsRef.current = Date.now(); // на случай повторной заявки
       formStartTrackedRef.current = false;
     } catch (err: any) {
+      trackConversionEvent('lead_error', { location: elementId, reason: String(err?.message || 'unknown_error') });
       alert(`${tr(lang, 'errorPrefix')}: ${err?.message || tr(lang, 'somethingWrong')}`);
     } finally {
       setIsSubmitting(false);
     }
   }
+
+  if (!hasFields) return null;
 
   return (
     <Annotated content={props as any}>
@@ -273,7 +323,7 @@ export default function FormBlock(props: Props) {
         ref={formRef}
         onInput={() => {
           if (isLeadForm && !formStartTrackedRef.current) {
-            trackConversionEvent('form_start', { location: elementId });
+            trackConversionEvent('lead_form_start', { location: elementId });
             formStartTrackedRef.current = true;
           }
         }}
@@ -295,7 +345,7 @@ export default function FormBlock(props: Props) {
             disabled={isSubmitting}
             onClick={() => {
               if (isLeadForm) {
-                trackConversionEvent('form_submit', { location: elementId });
+                trackConversionEvent('lead_form_submit', { location: elementId });
               }
             }}
             className={classNames(

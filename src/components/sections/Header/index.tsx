@@ -393,8 +393,8 @@ function ListOfSocialLinks({ links, inMobileMenu = false }) {
 
 function trackSocialClick(link, location: string) {
   const eventNameByIcon = {
-    telegram: 'messenger_telegram_click',
-    whatsapp: 'messenger_whatsapp_click'
+    telegram: 'click_telegram',
+    whatsapp: 'click_whatsapp'
   };
 
   trackConversionEvent(eventNameByIcon[link.icon] || 'social_click', {
