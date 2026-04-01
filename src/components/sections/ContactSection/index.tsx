@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import Markdown from 'markdown-to-jsx';
+import { useRouter } from 'next/router';
 
 import { DynamicComponent } from '@/components/components-registry';
 import FormBlock from '@/components/molecules/FormBlock';
@@ -8,14 +9,19 @@ import Section from '../Section';
 
 export default function ContactSection(props) {
     const { elementId, colors, backgroundSize, title, text, form, media, styles = {} } = props;
+    const router = useRouter();
+    const lang = normalizeLanguage(router.query.lang);
+    const localizedContent = getLocalizedContactContent(elementId, lang);
+
+    const resolvedTitle = localizedContent?.title ?? title;
     const sectionAlign = styles.self?.textAlign ?? 'left';
     return (
         <Section elementId={elementId} colors={colors} backgroundSize={backgroundSize} styles={styles.self}>
             <div className={classNames('flex gap-8', mapFlexDirectionStyles(styles.self?.flexDirection ?? 'row'))}>
                 <div className="flex-1 w-full">
-                    {title && (
+                    {resolvedTitle && (
                         <h2 className={classNames('text-4xl sm:text-5xl', mapStyles({ textAlign: sectionAlign }))}>
-                            {title}
+                            {resolvedTitle}
                         </h2>
                     )}
                     {text && (
@@ -47,6 +53,36 @@ export default function ContactSection(props) {
             </div>
         </Section>
     );
+}
+
+const supportedLanguages = ['ru', 'en', 'es'] as const;
+type Lang = (typeof supportedLanguages)[number];
+
+const contactContentTranslations = {
+    lead: {
+        en: {
+            title: 'Leave a request'
+        },
+        es: {
+            title: 'Enviar solicitud'
+        }
+    }
+} as const;
+
+function normalizeLanguage(value?: string | string[]): Lang {
+    const v = Array.isArray(value) ? value[0] : value;
+    if (v && supportedLanguages.includes(v as Lang)) {
+        return v as Lang;
+    }
+    return 'ru';
+}
+
+function getLocalizedContactContent(elementId: string | undefined, lang: Lang) {
+    if (!elementId || lang === 'ru') {
+        return null;
+    }
+
+    return contactContentTranslations[elementId]?.[lang] ?? null;
 }
 
 function ContactMedia({ media }) {
